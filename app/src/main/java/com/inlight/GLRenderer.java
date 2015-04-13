@@ -231,7 +231,7 @@ public class GLRenderer implements Renderer {
         GLES20.glGenTextures(1, texturenames, 0);
 
         // Retrieve our image from resources.
-        int id = mContext.getResources().getIdentifier("mipmap/texture2", null, mContext.getPackageName());
+        int id = mContext.getResources().getIdentifier("drawable/texture2", null, mContext.getPackageName());
 
         // Temporary create a bitmap
         Bitmap bmp = BitmapFactory.decodeResource(mContext.getResources(), id);
