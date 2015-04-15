@@ -19,7 +19,7 @@ public class MainActivity extends Activity {
     protected static final String EXTRA_RES_ID = "POS";
     private ArrayList<Integer> mThumbIdsFabrics = new ArrayList<Integer>(
 
-            Arrays.asList(R.drawable.texture2, R.drawable.sun));
+            Arrays.asList(R.drawable.sun));
     @Override
     public void onCreate(Bundle savedInstanceState) {
         requestWindowFeature(Window.FEATURE_NO_TITLE);

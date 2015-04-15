@@ -3,7 +3,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@mipmap/backg_yellow">
+    android:background="@drawable/backg_yellow">
 
     <Button
         style="?android:attr/buttonStyleSmall"

@@ -1,58 +1,63 @@
 package com.inlight;
 
 import android.opengl.GLES20;
+import android.util.Log;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Scanner;
 
 public class ShaderManager {
 
     public static int sp_SolidColor;
     public static int sp_Image;
 
-    // This shader is for rendering a colored primitive.
-    public static final String vs_SolidColor =
-            "uniform 	mat4 		uMVPMatrix;" +
-                    "attribute 	vec4 		vPosition;" +
-                    "void main() {" +
-                    "  gl_Position = uMVPMatrix * vPosition;" +
-                    "}";
+    public static String vs_SolidColor;
+    public static String fs_SolidColor;
+    public static String vs_Image;
+    public static String fs_Image;
 
-    public static final String fs_SolidColor =
-            "precision mediump float;" +
-                    "void main() {" +
-                    "  gl_FragColor = vec4(0.5,0,0,1);" +
-                    "}";
+    public static String readText(String fileName) throws IOException
+    {
+        BufferedReader br = new BufferedReader(new FileReader(fileName));
 
+        try
+        {
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
 
-    // This shader is for rendering 2D images straight from a texture
-    // No additional effects.
-    public static final String vs_Image =
-            "uniform mat4 uMVPMatrix;" +
-                    "attribute vec4 vPosition;" +
-                    "attribute vec4 a_Color;" +
-                    "attribute vec2 a_texCoord;" +
-                    "varying vec4 v_Color;" +
-                    "varying vec2 v_texCoord;" +
-                    "void main() {" +
-                    "  gl_Position = uMVPMatrix * vPosition;" +
-                    "  v_texCoord = a_texCoord;" +
-                    "  v_Color = a_Color;" +
-                    "}";
+            while (line != null)
+            {
+                sb.append(line);
+                sb.append("\n");
+                line = br.readLine();
+            }
 
-    public static final String fs_Image =
-            "precision mediump float;" +
-                    "varying vec2 v_texCoord;" +
-                    "varying vec4 v_Color;" +
-                    "uniform sampler2D s_texture;" +
-                    "void main() {" +
-                    "  gl_FragColor = texture2D( s_texture, v_texCoord ) * v_Color;" +
-                    "  gl_FragColor.rgb *= v_Color.a;" +
-                    "}";
+            return sb.toString();
+        }
 
 
+        finally
+        {
+            br.close();
+        }
+    }
+
+    public static void readShaders()
+    {
+        try {
+            // Read shaders from res/raw
+        }
+
+        catch (Exception e) {
+            Log.d("SHADER READ", e.getMessage());
+        }
+    }
 
     public static int loadShader(int type, String shaderCode){
 
-        // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
-        // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
         int shader = GLES20.glCreateShader(type);
 
         GLES20.glShaderSource(shader, shaderCode);

@@ -14,14 +14,7 @@ public class GLSurface extends GLSurfaceView {
         mRenderer = new GLRenderer(context);
         setRenderer(mRenderer);
 
-        // Render the view only when there is a change in the drawing data
         setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        mRenderer.onPause();
     }
 
     @Override

@@ -12,8 +12,6 @@ public class RenderActivity extends Activity {
 
     private GLSurfaceView glSurfaceView;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
