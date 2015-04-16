@@ -6,12 +6,10 @@ import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.view.Window;
-import android.view.WindowManager;
 
 public class ViewActivity extends Activity
 {
-
+    public static final String EXTRA_IMAGE="POS";
 	private GLSurfaceView mGLSurfaceView;
 
 	@Override

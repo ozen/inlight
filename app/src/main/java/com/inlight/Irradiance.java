@@ -1,10 +1,7 @@
 package com.inlight;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.hardware.Camera;
-import android.util.Log;
 
 public class Irradiance  {
     public static final String TAG = "Irradiance";
