@@ -6,10 +6,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -21,7 +23,7 @@ import java.lang.ref.WeakReference;
 
 public class GridActivity extends Activity implements AdapterView.OnItemClickListener {
     private ImageAdapter mAdapter;
-
+    private Bitmap mPlaceHolderBitmap;
     // A static dataset to back the GridView adapter
     public final static Integer[] mImageResIds = new Integer[] {
             R.drawable.fabric_5510};
@@ -30,10 +32,15 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 4;
+        mPlaceHolderBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.duck, options);
+
         setContentView(R.layout.activity_grid);
         GridView gridview = (GridView) findViewById(R.id.gridview);
 
         gridview.setAdapter(new ImageAdapter(this));
+        gridview.setOnItemClickListener(this);
 
     }
 
@@ -41,7 +48,7 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-        final Intent i = new Intent(this, ViewActivity.class);
+        final Intent i = new Intent(GridActivity.this, ViewActivity.class);
         i.putExtra(ViewActivity.EXTRA_IMAGE, position);
         startActivity(i);
     }
@@ -83,11 +90,12 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
                 imageView = (ImageView) convertView;
             }
            // imageView.setImageResource(mImageResIds[position]); // Load image into ImageView
-            loadBitmap(mImageResIds[position], imageView)
+            loadBitmap(mImageResIds[position], imageView);
             return imageView;
         }
     }
-    public void loadBitmap(int resId, ImageView imageView) {
+
+    private void loadBitmap(int resId, ImageView imageView) {
         if (cancelPotentialWork(resId, imageView)) {
             final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
             final AsyncDrawable asyncDrawable =
@@ -97,22 +105,49 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
         }
     }
 
-    static class AsyncDrawable extends BitmapDrawable {
-        private final WeakReference<BitmapWorkerTask> bitmapWorkerTaskReference;
+    private static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
 
-        public AsyncDrawable(Resources res, Bitmap bitmap,
-                             BitmapWorkerTask bitmapWorkerTask) {
-            super(res, bitmap);
-            bitmapWorkerTaskReference =
-                    new WeakReference<BitmapWorkerTask>(bitmapWorkerTask);
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) > reqHeight
+                    && (halfWidth / inSampleSize) > reqWidth) {
+                inSampleSize *= 2;
+            }
         }
 
-        public BitmapWorkerTask getBitmapWorkerTask() {
-            return bitmapWorkerTaskReference.get();
-        }
+        return inSampleSize;
     }
 
-    public static boolean cancelPotentialWork(int data, ImageView imageView) {
+    private static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
+                                                         int reqWidth, int reqHeight) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeResource(res, resId, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeResource(res, resId, options);
+    }
+
+
+
+
+    private static boolean cancelPotentialWork(int data, ImageView imageView) {
         final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
 
         if (bitmapWorkerTask != null) {
@@ -140,6 +175,26 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
         return null;
     }
 
+
+
+
+
+    static class AsyncDrawable extends BitmapDrawable {
+        private final WeakReference<BitmapWorkerTask> bitmapWorkerTaskReference;
+
+        public AsyncDrawable(Resources res, Bitmap bitmap,
+                             BitmapWorkerTask bitmapWorkerTask) {
+            super(res, bitmap);
+            bitmapWorkerTaskReference =
+                    new WeakReference<BitmapWorkerTask>(bitmapWorkerTask);
+        }
+
+        public BitmapWorkerTask getBitmapWorkerTask() {
+            return bitmapWorkerTaskReference.get();
+        }
+    }
+
+
     class BitmapWorkerTask extends AsyncTask<Integer, Void, Bitmap> {
         private final WeakReference<ImageView> imageViewReference;
         private int data = 0;
@@ -153,7 +208,7 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
         @Override
         protected Bitmap doInBackground(Integer... params) {
             data = params[0];
-            return decodeSampledBitmapFromResource(getResources(), data, 100, 100));
+            return decodeSampledBitmapFromResource(getResources(), data, 100, 100);
         }
 
         // Once complete, see if ImageView is still around and set bitmap.

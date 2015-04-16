@@ -6,9 +6,9 @@ import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.util.Log;
 
-public class ViewActivity extends Activity
-{
+public class ViewActivity extends Activity{
     public static final String EXTRA_IMAGE="POS";
 	private GLSurfaceView mGLSurfaceView;
 
@@ -17,7 +17,7 @@ public class ViewActivity extends Activity
 	{
 
         super.onCreate(savedInstanceState);
-		
+		Log.d("ViewActivity", "ViewActivity created");
 		mGLSurfaceView = new GLSurfaceView(this);
 
 		// Check if the system supports OpenGL ES 2.0.
