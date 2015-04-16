@@ -49,15 +49,17 @@ public class RenderManager implements GLSurfaceView.Renderer,
 
     @Override
     public void onPictureTaken(byte[] data, Camera camera) {
-        Bitmap tmpBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-        Bitmap bitmap = Bitmap.createScaledBitmap(tmpBitmap,64,64,false);
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 8;
+        final Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+
         double[][] coeffs = Irradiance.prefilter(bitmap);
         lightDirection = Irradiance.calculateLightDirection(coeffs);
         mCoefficientMatrix = Irradiance.toMatrix(coeffs);
-        bitmap.recycle();
+
         mView.requestRender();
         mCamera.takePicture(null, null, this);
-
+        bitmap.recycle();
     }
 
     private int findFrontFacingCameraId() {

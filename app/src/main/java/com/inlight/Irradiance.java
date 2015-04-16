@@ -30,14 +30,15 @@ public class Irradiance  {
     public static double[][] prefilter(Bitmap bitmap) {
 
         int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
         double[][] coeffs = new double[9][3];
 
         for (int i = 0 ; i < width ; i++) {
-            for (int j = 0 ; j < width ; j++) {
+            for (int j = 0 ; j < height ; j++) {
 /* We now find the cartesian components for the point (i,j) */
                 double u,v,r,theta,phi,x,y,z,domega ;
                 v = (width/2.0f - i)/(width/2.0f); /* v ranges from -1 to 1 */
-                u = (j - width/2.0f)/(width/2.0f); /* u ranges from -1 to 1 */
+                u = (j - height/2.0f)/(height/2.0f); /* u ranges from -1 to 1 */
                 r = Math.sqrt(u*u + v*v) ; /* The "radius" */
                 if (r <= 1.0) { /* Consider only circle with r<1 */
                     theta = Math.PI*r ; /* theta parameter of (i,j) */
