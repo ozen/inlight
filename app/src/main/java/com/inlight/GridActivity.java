@@ -26,7 +26,9 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
     private Bitmap mPlaceHolderBitmap;
     // A static dataset to back the GridView adapter
     public final static Integer[] mImageResIds = new Integer[] {
-            R.drawable.fabric_5510};
+            R.drawable.fabric_5510,
+            R.drawable.fabric_6164,
+            R.drawable.fabric_6447};
 
 
     @Override

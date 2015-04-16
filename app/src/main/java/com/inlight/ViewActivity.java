@@ -3,6 +3,7 @@ package com.inlight;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ConfigurationInfo;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -11,6 +12,18 @@ import android.util.Log;
 public class ViewActivity extends Activity{
     public static final String EXTRA_IMAGE="POS";
 	private GLSurfaceView mGLSurfaceView;
+    private int pos;
+
+    public final static Integer[] mImageResIds = new Integer[] {
+            R.drawable.fabric_5510,
+            R.drawable.fabric_6164,
+            R.drawable.fabric_6447};
+
+    public final static Integer[] mBumpResIds = new Integer[] {
+            R.drawable.fabric_5510_bump,
+            R.drawable.fabric_6164_bump,
+            R.drawable.fabric_6447_bump};
+
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) 
@@ -19,6 +32,8 @@ public class ViewActivity extends Activity{
         super.onCreate(savedInstanceState);
 		Log.d("ViewActivity", "ViewActivity created");
 		mGLSurfaceView = new GLSurfaceView(this);
+        Intent intent = getIntent();
+        pos = (int) intent.getExtras().get(EXTRA_IMAGE);
 
 		// Check if the system supports OpenGL ES 2.0.
 		final ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -31,7 +46,7 @@ public class ViewActivity extends Activity{
 			mGLSurfaceView.setEGLContextClientVersion(2);
 
 			// Set the renderer to our demo renderer, defined below.
-			mGLSurfaceView.setRenderer(new RenderManager(this, mGLSurfaceView));
+			mGLSurfaceView.setRenderer(new RenderManager(this, mGLSurfaceView, mImageResIds[pos], mBumpResIds[pos]));
 		} 
 		else 
 		{
@@ -40,7 +55,10 @@ public class ViewActivity extends Activity{
 		}
 
 		setContentView(mGLSurfaceView);
-	}
+
+
+
+    }
 
 	@Override
 	protected void onResume() 
@@ -51,10 +69,15 @@ public class ViewActivity extends Activity{
 	}
 
 	@Override
-	protected void onPause() 
-	{
-		// The activity must call the GL surface view's onPause() on activity onPause().
-		super.onPause();
-		mGLSurfaceView.onPause();
-	}	
+	protected void onPause() {
+        // The activity must call the GL surface view's onPause() on activity onPause().
+        super.onPause();
+        mGLSurfaceView.onPause();
+    }
+    public int getTextureResourceId(){
+        return mImageResIds[pos];
+    }
+    public int getBumpResourceId(){
+        return mBumpResIds[pos];
+    }
 }
