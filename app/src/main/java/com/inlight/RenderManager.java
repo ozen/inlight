@@ -44,10 +44,22 @@ public class RenderManager implements GLSurfaceView.Renderer,
         mView = v;
         mTextureResId = texResId;
         mBumpResId = bumpResId;
-        mCamera = Camera.open(findFrontFacingCameraId());
+
         //   Camera.Size s = mCamera.getParameters().getPictureSize();
         //  Log.d(TAG, "w =  " + s.width + "   h = " +  s.height);
 
+    }
+
+    public void onResume(){
+        if(mCamera == null)
+            mCamera = Camera.open(findFrontFacingCameraId());
+    }
+
+    public void onPause(){
+        if (mCamera != null) {
+            mCamera.release();
+            mCamera = null;
+        }
     }
 
     @Override
