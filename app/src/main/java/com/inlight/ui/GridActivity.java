@@ -1,4 +1,4 @@
-package com.inlight;
+package com.inlight.ui;
 
 
 import android.app.Activity;
@@ -17,6 +17,8 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+
+import com.inlight.R;
 
 import java.lang.ref.WeakReference;
 
@@ -44,7 +46,7 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
         gridview.setOnItemClickListener(this);
 
     }
-   
+
 
 
     @Override

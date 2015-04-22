@@ -1,4 +1,4 @@
-package com.inlight;
+package com.inlight.util;
 
 import android.content.Context;
 

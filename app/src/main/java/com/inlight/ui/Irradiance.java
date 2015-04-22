@@ -1,4 +1,4 @@
-package com.inlight;
+package com.inlight.ui;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;

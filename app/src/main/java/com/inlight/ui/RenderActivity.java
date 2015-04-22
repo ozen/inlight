@@ -1,4 +1,4 @@
-package com.inlight;
+package com.inlight.ui;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -8,6 +8,8 @@ import android.content.pm.ConfigurationInfo;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
+
+import com.inlight.R;
 
 public class RenderActivity extends Activity{
     public static final String EXTRA_IMAGE="POS";

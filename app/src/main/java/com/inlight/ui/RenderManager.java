@@ -1,4 +1,4 @@
-package com.inlight;
+package com.inlight.ui;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -9,6 +9,12 @@ import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.os.SystemClock;
 import android.util.Log;
+
+import com.inlight.R;
+import com.inlight.ui.Irradiance;
+import com.inlight.util.RawResourceReader;
+import com.inlight.util.ShaderHelper;
+import com.inlight.util.TextureHelper;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
