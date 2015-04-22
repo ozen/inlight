@@ -11,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.LruCache;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -20,11 +21,17 @@ import android.widget.ImageView;
 
 import com.inlight.R;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 
+
+
 public class GridActivity extends Activity implements AdapterView.OnItemClickListener {
+
+    private LruCache<String, Bitmap> mMemoryCache;
     private ImageAdapter mAdapter;
     private Bitmap mPlaceHolderBitmap;
+
     // A static dataset to back the GridView adapter
     public final static Integer[] mImageResIds = new Integer[] {
             R.drawable.fabric_5510,
@@ -35,6 +42,11 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+
+
+
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = 4;
         mPlaceHolderBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.duck, options);
@@ -44,6 +56,25 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
 
         gridview.setAdapter(new ImageAdapter(this));
         gridview.setOnItemClickListener(this);
+
+
+
+        // Get max available VM memory, exceeding this amount will throw an
+        // OutOfMemory exception. Stored in kilobytes as LruCache takes an
+        // int in its constructor.
+        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+
+        // Use 1/8th of the available memory for this memory cache.
+        final int cacheSize = maxMemory / 8;
+
+        mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
+            @Override
+            protected int sizeOf(String key, Bitmap bitmap) {
+                // The cache size will be measured in kilobytes rather than
+                // number of items.
+                return bitmap.getByteCount() / 1024;
+            }
+        };
 
     }
 
@@ -99,12 +130,22 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
     }
 
     private void loadBitmap(int resId, ImageView imageView) {
-        if (cancelPotentialWork(resId, imageView)) {
-            final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
-            final AsyncDrawable asyncDrawable =
-                    new AsyncDrawable(getResources(), mPlaceHolderBitmap, task);
-            imageView.setImageDrawable(asyncDrawable);
-            task.execute(resId);
+
+        final String imageKey = String.valueOf(resId);
+
+        final Bitmap bitmap = getBitmapFromMemCache(imageKey);
+        if (bitmap != null) {
+            imageView.setImageBitmap(bitmap);
+        } else {
+
+
+            if (cancelPotentialWork(resId, imageView)) {
+                final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
+                final AsyncDrawable asyncDrawable =
+                        new AsyncDrawable(getResources(), mPlaceHolderBitmap, task);
+                imageView.setImageDrawable(asyncDrawable);
+                task.execute(resId);
+            }
         }
     }
 
@@ -167,6 +208,9 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
         return true;
     }
 
+
+
+
     private static BitmapWorkerTask getBitmapWorkerTask(ImageView imageView) {
         if (imageView != null) {
             final Drawable drawable = imageView.getDrawable();
@@ -179,7 +223,15 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
     }
 
 
+    private void addBitmapToMemoryCache(String key, Bitmap bitmap) {
+        if (getBitmapFromMemCache(key) == null) {
+            mMemoryCache.put(key, bitmap);
+        }
+    }
 
+    private Bitmap getBitmapFromMemCache(String key) {
+        return mMemoryCache.get(key);
+    }
 
 
     static class AsyncDrawable extends BitmapDrawable {
@@ -198,6 +250,7 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
     }
 
 
+
     class BitmapWorkerTask extends AsyncTask<Integer, Void, Bitmap> {
         private final WeakReference<ImageView> imageViewReference;
         private int data = 0;
@@ -211,7 +264,10 @@ public class GridActivity extends Activity implements AdapterView.OnItemClickLis
         @Override
         protected Bitmap doInBackground(Integer... params) {
             data = params[0];
-            return decodeSampledBitmapFromResource(getResources(), data, 100, 100);
+            final Bitmap bitmap = decodeSampledBitmapFromResource(
+                    getResources(), data, 100, 100);
+            addBitmapToMemoryCache(String.valueOf(data), bitmap);
+            return bitmap;
         }
 
         // Once complete, see if ImageView is still around and set bitmap.
