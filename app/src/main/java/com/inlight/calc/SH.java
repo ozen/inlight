@@ -145,7 +145,7 @@ public class SH {
         }
         return 0;
     }
- 
+
 
 
     private static double[] index2sph(int[] index) {
