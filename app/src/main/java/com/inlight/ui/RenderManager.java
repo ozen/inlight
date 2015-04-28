@@ -223,7 +223,7 @@ public class RenderManager implements GLSurfaceView.Renderer,
 
         //mBRDFCoeffs
         int mBRDFCoeffsHandle = GLES20.glGetAttribLocation(mProgramHandle, "u_BRDFCoeffs");
-        GLES20.glUniform3fv(mBRDFCoeffsHandle, 33*33, mBRDFArray, 0 );
+        GLES20.glUniform3fv(mBRDFCoeffsHandle, 3267, mBRDFArray, 0 );
 
     /*    int mCoeffMatrixRedHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_CoeffMatrixRed");
         GLES20.glUniformMatrix4fv(mCoeffMatrixRedHandle, 1, false, mCoefficientMatrix[0], 0);
