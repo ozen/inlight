@@ -2,6 +2,7 @@ package com.inlight.calc;
 
 
 import android.content.Context;
+import android.graphics.Bitmap;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -23,8 +24,8 @@ public class SH {
            return brdfCoefs;
     }
 
-    public static double[] computeLightCoefs(){
-        
+    public static double[][] computeLightCoefs(Bitmap bitmap){
+
     }
 
     private static void projectBRDF() {
