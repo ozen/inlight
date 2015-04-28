@@ -11,12 +11,14 @@ public class TextureHelper
 {
     private static final String TAG = "TextureHelper";
 	public static int[] loadTexture(final Context context,
-                                  final int textureResourceId, final int bumpResourceId  )
+                                  final int textureResourceId,
+                                  final int bumpResourceId,
+                                  final int specularResourceId)
 	{
 
-		final int[] textureHandle = new int[2];
+		final int[] textureHandle = new int[3];
 		
-		GLES20.glGenTextures(2, textureHandle, 0);
+		GLES20.glGenTextures(3, textureHandle, 0);
 		
 		if (textureHandle[0] != 0)
 		{
@@ -49,7 +51,7 @@ public class TextureHelper
             options.inScaled = false;	// No pre-scaling
 
 
-            final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), textureResourceId, options);
+            final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), bumpResourceId, options);
 
             Log.d(TAG, "Bump " + "w=" + bitmap.getWidth()+ "  h=" + bitmap.getHeight());
 
@@ -68,7 +70,35 @@ public class TextureHelper
         {
             throw new RuntimeException("Error loading bump map.");
         }
-		
-		return textureHandle;
+
+
+        if (textureHandle[2] != 0)
+        {
+            final BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inScaled = false;	// No pre-scaling
+
+
+            final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), specularResourceId, options);
+
+            Log.d(TAG, "Specular " + "w=" + bitmap.getWidth()+ "  h=" + bitmap.getHeight());
+
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[2]);
+
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+
+
+            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+
+            bitmap.recycle();
+        }
+
+        if (textureHandle[2] == 0)
+        {
+            throw new RuntimeException("Error loading specular map.");
+        }
+
+
+        return textureHandle;
 	}
 }

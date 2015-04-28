@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -27,6 +28,7 @@ public class SH {
     }
 
     public static double[][] computeLightCoefs(Bitmap bitmap){
+        generateSampleVectors(1000);
         double lightCoefs[][] = new double[9][3];
         for (int col = 0; col < 3; col++) {
 
@@ -225,7 +227,10 @@ public class SH {
         return chCol/255.0;
 
     }
+    private static double getLight(Bitmap bitmap, Vector3D vec, int col){
 
+        return 0.0;
+    }
     private static double[] index2sph(int[] index) {
         double theta = (index[0] - 16) * (Math.PI / 32);
         double phi = (index[1] - 16) * (Math.PI / 32);
