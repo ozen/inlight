@@ -13,54 +13,60 @@ import java.util.ArrayList;
 
 public class SH {
     private static Vector3D[][] envNormals;
-    private static ArrayList<Vector3D> sampleVectors = new ArrayList<>();
-    private static double brdfCoefs[][][] = new double[33][33][9];
-
-    private static double roughness = 3.6;
-    private static double fresnel = 0.2;
 
 
-
-    public static double[][][] computeBRDFCoefs(Context ctx) {
-
-           generateSampleVectors(1000);
-           projectBRDF();
-
-           return brdfCoefs;
+    public static void readEnvNormals(Context context){
+        envNormals = RawResourceHelper.readEnvNormals(context);
     }
 
-    public static double[][] computeLightCoefs(Bitmap bitmap, Context ctx){
-        envNormals = RawResourceHelper.readEnvNormals(ctx);
+
+
+    public static double[][] computeLightCoefs(Bitmap bitmap) {
+
         double lightCoefs[][] = new double[9][3];
-        for (int col = 0; col < 3; col++) {
-
-            for (Vector3D L : sampleVectors) {
-
-                double light;
-                if (L.z >= 0) {
-                    light = getLight(bitmap, L, col);
-                } else {
-                    light = getLight(bitmap, L.zmirror(), col);
-                }
-                if (light < 0.000001) continue;
-                int coefNo = 0;
-                for (int l = 0; l <= 2; l++) {
-                    for (int m = -l; m <= l; m++) {
-                        lightCoefs[coefNo++][col] += light * yml(l, m, L.x, L.y, L.z);
+        int width = envNormals.length;
+        int height = envNormals[0].length;
+        for (int band = 0; band < 3; band++) {
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
+                    Vector3D L = envNormals[x][y];
+                    int light = bitmap.getPixel(x, y);
+                    int value = 0;
+                    switch (band) {
+                        case 0:
+                            value = Color.red(light);
+                            break;
+                        case 1:
+                            value = Color.green(light);
+                            break;
+                        case 2:
+                            value = Color.blue(light);
+                            break;
+                    }
+                    int coefNo = 0;
+                    for (int l = 0; l <= 2; l++) {
+                        for (int m = -l; m <= l; m++) {
+                            lightCoefs[coefNo++][band] += value * yml(l, m, L.x, L.y, L.z);
+                        }
                     }
                 }
             }
-
             for (int k = 0; k < 9; k++) {
-                lightCoefs[k][col] *= (4 * Math.PI) / sampleVectors.size();
+                lightCoefs[k][band] *= (4 * Math.PI) / (width * height);
             }
         }
         return lightCoefs;
     }
 
 
-    private static void projectBRDF() {
+
+    private static double[][][] computeBRDFCoefs() {
      //   System.out.println("Calculating BRDF SH projection.");
+        ArrayList<Vector3D> sampleVectors = generateSampleVectors(1000);
+        double brdfCoefs[][][] = new double[33][33][9];
+        double roughness = 3.6;
+        double fresnel = 0.2;
+
         long startTime = System.currentTimeMillis();
         Vector3D V = new Vector3D(0.0, 0.0, 1.0);
         for (int t = 0; t < 33; t++) {
@@ -90,9 +96,11 @@ public class SH {
             }
         }
        // System.out.format("BRDF SH projection completed in %d seconds.\n", (System.currentTimeMillis() - startTime) / 1000);
+        return brdfCoefs;
     }
 
-    private static void generateSampleVectors(int N) {
+    private static ArrayList<Vector3D> generateSampleVectors(int N) {
+        ArrayList<Vector3D> sampleVectors = new ArrayList<Vector3D>();
         int sqN = (int) Math.sqrt(N);
         double oneover = 1.0 / sqN;
         for (int a = 0; a < sqN; a++) {
@@ -104,6 +112,7 @@ public class SH {
                 sampleVectors.add(new Vector3D(sph2cart(new double[]{theta, phi})));
             }
         }
+        return sampleVectors;
     }
 
     private static double yml(int l, int m, double x, double y, double z) {
@@ -136,37 +145,9 @@ public class SH {
         }
         return 0;
     }
-    private static double checkBRDF(Vector3D V, Vector3D L, Vector3D N) {
-        double brdf = BRDF.brdf(V, L, N, roughness, fresnel);
-        int[] index = cart2index(new double[]{N.x, N.y, N.z});
-        double expansion = 0;
-        int coefNo = 0;
-        for (int l = 0; l <= 2; l++) {
-            for (int m = -l; m <= l; m++) {
-                expansion += yml(l, m, L.x, L.y, L.z) * brdfCoefs[index[0]][index[1]][coefNo++];
-            }
-        }
-        System.out.format("Direct: %f - Expansion: %f\n", brdf, expansion);
-        return expansion;
-    }
+ 
 
 
-
-    private static double getColor(Bitmap bitmap, int i, int j, int ch){
-        int col = bitmap.getPixel(i,j);
-        int chCol=0;
-        switch(ch){
-            case 0: chCol = Color.red(col); break;
-            case 1: chCol = Color.green(col); break;
-            case 2: chCol = Color.blue(col); break;
-        }
-        return chCol/255.0;
-
-    }
-    private static double getLight(Bitmap bitmap, Vector3D vec, int col){
-
-        return 0.0;
-    }
     private static double[] index2sph(int[] index) {
         double theta = (index[0] - 16) * (Math.PI / 32);
         double phi = (index[1] - 16) * (Math.PI / 32);
