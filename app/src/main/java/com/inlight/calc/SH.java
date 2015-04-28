@@ -19,6 +19,36 @@ public class SH {
         envNormals = RawResourceHelper.readEnvNormals(context);
     }
 
+    public static double[][] computeIrradianceMatrix(double[][] coeffs) {
+
+        int col ;
+        double[][] matrix = new double[3][16];
+        double c1,c2,c3,c4,c5 ;
+        c1 = 0.429043 ; c2 = 0.511664 ;
+        c3 = 0.743125 ; c4 = 0.886227 ; c5 = 0.247708 ;
+        for (col = 0 ; col < 3 ; col++) { /* Equation 12 */
+            matrix[col][0] = (c1*coeffs[8][col]) ; /* c1 L_{22} */
+            matrix[col][1] =  (c1*coeffs[4][col]) ; /* c1 L_{2-2} */
+            matrix[col][2] =  (c1*coeffs[7][col]) ; /* c1 L_{21} */
+            matrix[col][3] =  (c2*coeffs[3][col]) ; /* c2 L_{11} */
+            matrix[col][4] =  (c1*coeffs[4][col]) ; /* c1 L_{2-2} */
+            matrix[col][5] =  (-c1*coeffs[8][col]); /*-c1 L_{22} */
+            matrix[col][6] =  (c1*coeffs[5][col]) ; /* c1 L_{2-1} */
+            matrix[col][7] =  (c2*coeffs[1][col]) ; /* c2 L_{1-1} */
+            matrix[col][8] =  (c1*coeffs[7][col]) ; /* c1 L_{21} */
+            matrix[col][9] =  (c1*coeffs[5][col]) ; /* c1 L_{2-1} */
+            matrix[col][10] =  (c3*coeffs[6][col]) ; /* c3 L_{20} */
+            matrix[col][11] =  (c2*coeffs[2][col]) ; /* c2 L_{10} */
+            matrix[col][12] =  (c2*coeffs[3][col]) ; /* c2 L_{11} */
+            matrix[col][13] =  (c2*coeffs[1][col]) ; /* c2 L_{1-1} */
+            matrix[col][14] =  (c2*coeffs[2][col]) ; /* c2 L_{10} */
+            matrix[col][15] =  (c4*coeffs[0][col] - c5*coeffs[6][col]) ;
+/* c4 L_{00} - c5 L_{20} */
+        }
+        return matrix;
+    }
+
+
 
 
     public static double[][] computeLightCoefs(Bitmap bitmap) {
@@ -60,7 +90,7 @@ public class SH {
 
 
 
-    private static double[][][] computeBRDFCoefs() {
+    public static double[][][] computeBRDFCoefs() {
      //   System.out.println("Calculating BRDF SH projection.");
         ArrayList<Vector3D> sampleVectors = generateSampleVectors(1000);
         double brdfCoefs[][][] = new double[33][33][9];

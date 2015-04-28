@@ -60,9 +60,10 @@ public class RenderActivity extends Activity{
 
 		setContentView(mGLSurfaceView);
 
-
+        mRenderManager.onCreate();
 
     }
+
 
 	@Override
 	protected void onResume() 
