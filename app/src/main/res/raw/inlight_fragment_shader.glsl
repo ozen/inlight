@@ -7,6 +7,12 @@ uniform vec3 u_BRDFCoeffs[33][33][3];
 
 varying vec2 v_TexCoord;
 
+
+vec3 getBRDF(vec3 normal, int part);
+vec2 cart2sph(vec3 cart);
+vec2 sph2index(vec2 sph);
+
+
 void main()
 {
     vec4 normal = vec4(normalize(texture2D(u_Bump, v_TexCoord).rgb*2.0-1.0), 1.0);
@@ -19,8 +25,8 @@ void main()
     // update irradiance matrix
     for(int band=0; band<3; band++)
     {
-        c5L20 = (u_IrradianceMatrix[band][2][2] / 0.743125) * 0.247708;
-        c4L00 = u_IrradianceMatrix[band][2][2] + c5L20;
+        float c5L20 = (u_IrradianceMatrix[band][2][2] / 0.743125) * 0.247708;
+        float c4L00 = u_IrradianceMatrix[band][2][2] + c5L20;
 
         u_IrradianceMatrix[band][0][0] *= brdf3.z;
         u_IrradianceMatrix[band][0][1] *= brdf2.y;
@@ -59,17 +65,17 @@ void main()
 vec3 getBRDF(vec3 normal, int part)
 {
     vec2 index = sph2index(cart2sph(normal));
-    uvec2 ul = (floor(index.x), ceil(index.y))
-    uvec2 ll = (floor(index.x), floor(index.y))
-    uvec2 ur = (ceil(index.x), ceil(index.y))
-    uvec2 lr = (ceil(index.x), floor(index.y))
+    ivec2 ul = (floor(index.x), ceil(index.y));
+    ivec2 ll = (floor(index.x), floor(index.y));
+    ivec2 ur = (ceil(index.x), ceil(index.y));
+    ivec2 lr = (ceil(index.x), floor(index.y));
 
-    float hratio = index.x - floor(index.x)
-    float vratio = index.y - floor(index.y)
+    float hratio = index.x - floor(index.x);
+    float vratio = index.y - floor(index.y);
 
     return mix(
-        mix(brdfCoeff[ll.x][ll.y][part], brdfCoeff[lr.x][lr.y][part], hratio),
-        mix(brdfCoeff[ul.x][ul.y][part], brdfCoeff[ur.x][ur.y][part], hratio), vratio);
+        mix(u_BRDFCoeffs[ll.x][ll.y][part], u_BRDFCoeffs[lr.x][lr.y][part], hratio),
+        mix(u_BRDFCoeffs[ul.x][ul.y][part], u_BRDFCoeffs[ur.x][ur.y][part], hratio), vratio);
 }
 
 

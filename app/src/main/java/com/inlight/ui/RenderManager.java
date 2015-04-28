@@ -4,7 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
-import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.os.SystemClock;
@@ -65,9 +65,7 @@ public class RenderManager implements GLSurfaceView.Renderer,
     public void onResume(){
         if(mCamera == null) {
             mCamera = Camera.open(findFrontFacingCameraId());
-            Camera.Parameters param = mCamera.getParameters();
-            param.setPictureSize(140,140);
-            mCamera.setParameters(param);
+
         }
     }
 
@@ -81,8 +79,8 @@ public class RenderManager implements GLSurfaceView.Renderer,
     @Override
     public void onPictureTaken(byte[] data, Camera camera) {
 
-        final Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-
+        final Bitmap pic = BitmapFactory.decodeByteArray(data, 0, data.length);
+        final Bitmap bitmap = Bitmap.createScaledBitmap(pic,140,140,true);
         mIrradianceMatrix = SH.computeIrradianceMatrix(SH.computeLightCoefs(bitmap));
 
         mView.requestRender();
@@ -129,9 +127,9 @@ public class RenderManager implements GLSurfaceView.Renderer,
         final String vertexShaderSource = RawResourceHelper.readTextFileFromRawResource(mContext, R.raw.inlight_vertex_shader);
         final String fragmentShaderSource = RawResourceHelper.readTextFileFromRawResource(mContext, R.raw.inlight_fragment_shader);
         // Compile, link shaders
-        final int vertexShaderHandle = ShaderHelper.compileShader(GLES20.GL_VERTEX_SHADER, vertexShaderSource);
+        final int vertexShaderHandle = ShaderHelper.compileShader(GLES30.GL_VERTEX_SHADER, vertexShaderSource);
 
-        final int fragmentShaderHandle = ShaderHelper.compileShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderSource);
+        final int fragmentShaderHandle = ShaderHelper.compileShader(GLES30.GL_FRAGMENT_SHADER, fragmentShaderSource);
 
         return ShaderHelper.createAndLinkProgram(vertexShaderHandle, fragmentShaderHandle,
                 new String[] {"a_Position" });
@@ -141,13 +139,13 @@ public class RenderManager implements GLSurfaceView.Renderer,
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
 
         mProgramHandle = getCompiledProgramHandle();
-        GLES20.glUseProgram(mProgramHandle);
+        GLES30.glUseProgram(mProgramHandle);
 
         setupRectangle();
 
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        GLES20.glEnable(GLES20.GL_BLEND);
-        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        GLES30.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        GLES30.glEnable(GLES30.GL_BLEND);
+        GLES30.glBlendFunc(GLES30.GL_ONE, GLES30.GL_ONE_MINUS_SRC_ALPHA);
 
 
         Matrix.setLookAtM(mViewMatrix, 0, 0f, 0f, 0f, 0f, 0f, -5.0f, 0.0f, 1.0f, 0.0f);
@@ -164,7 +162,7 @@ public class RenderManager implements GLSurfaceView.Renderer,
     @Override
     public void onSurfaceChanged(GL10 unused, int width, int height) {
 
-        GLES20.glViewport(0, 0, width, height);
+        GLES30.glViewport(0, 0, width, height);
         float ratio = (float) width/height;
         Matrix.orthoM(mProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, 1.0f, 7.0f);
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVMatrix, 0);
@@ -182,28 +180,28 @@ public class RenderManager implements GLSurfaceView.Renderer,
     public void onDrawFrame(GL10 unused) {
         printFPS();
 
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
         if(mIrradianceMatrix == null) return;
 
-        int mTextureUniformHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_Texture");
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[0]);
-        GLES20.glUniform1i(mTextureUniformHandle, 0);
+        int mTextureUniformHandle = GLES30.glGetUniformLocation(mProgramHandle, "u_Texture");
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, mTextureDataHandle[0]);
+        GLES30.glUniform1i(mTextureUniformHandle, 0);
 
-        int mBumpUniformHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_Bump");
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[1]);
-        GLES20.glUniform1i(mBumpUniformHandle, 1);
-
-
-        int mPositionHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_Position");
-        GLES20.glEnableVertexAttribArray(mPositionHandle);
-        GLES20.glVertexAttribPointer(mPositionHandle, 2,
-                GLES20.GL_FLOAT, false, 0, vertexBuffer);
+        int mBumpUniformHandle = GLES30.glGetUniformLocation(mProgramHandle, "u_Bump");
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE1);
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, mTextureDataHandle[1]);
+        GLES30.glUniform1i(mBumpUniformHandle, 1);
 
 
-        int mMVPHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_MVPMatrix");
-        GLES20.glUniformMatrix4fv(mMVPHandle, 1, false, mMVPMatrix, 0);
+        int mPositionHandle = GLES30.glGetAttribLocation(mProgramHandle, "a_Position");
+        GLES30.glEnableVertexAttribArray(mPositionHandle);
+        GLES30.glVertexAttribPointer(mPositionHandle, 2,
+                GLES30.GL_FLOAT, false, 0, vertexBuffer);
+
+
+        int mMVPHandle = GLES30.glGetUniformLocation(mProgramHandle, "u_MVPMatrix");
+        GLES30.glUniformMatrix4fv(mMVPHandle, 1, false, mMVPMatrix, 0);
 
         //mIrradianceMatrix
         float[] mIrradianceArray = new float[48];
@@ -218,27 +216,27 @@ public class RenderManager implements GLSurfaceView.Renderer,
                 for(int k=0;k<9;k++)
                     mBRDFArray[9*33*i+9*j+k] = (float) mBRDFCoeffs[i][j][k];
 
-        int mIrradianceMatrixHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_IrradianceMatrix");
-        GLES20.glUniformMatrix4fv(mIrradianceMatrixHandle, 3, false, mIrradianceArray, 0);
+        int mIrradianceMatrixHandle = GLES30.glGetUniformLocation(mProgramHandle, "u_IrradianceMatrix");
+        GLES30.glUniformMatrix4fv(mIrradianceMatrixHandle, 3, false, mIrradianceArray, 0);
 
         //mBRDFCoeffs
-        int mBRDFCoeffsHandle = GLES20.glGetAttribLocation(mProgramHandle, "u_BRDFCoeffs");
-        GLES20.glUniform3fv(mBRDFCoeffsHandle, 3267, mBRDFArray, 0 );
+        int mBRDFCoeffsHandle = GLES30.glGetAttribLocation(mProgramHandle, "u_BRDFCoeffs");
+        GLES30.glUniform3fv(mBRDFCoeffsHandle, 3267, mBRDFArray, 0 );
 
-    /*    int mCoeffMatrixRedHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_CoeffMatrixRed");
-        GLES20.glUniformMatrix4fv(mCoeffMatrixRedHandle, 1, false, mCoefficientMatrix[0], 0);
-        int mCoeffMatrixGreenHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_CoeffMatrixGreen");
-        GLES20.glUniformMatrix4fv(mCoeffMatrixGreenHandle, 1, false, mCoefficientMatrix[1], 0);
-        int mCoeffMatrixBlueHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_CoeffMatrixBlue");
-        GLES20.glUniformMatrix4fv(mCoeffMatrixBlueHandle, 1, false, mCoefficientMatrix[2], 0);
+    /*    int mCoeffMatrixRedHandle = GLES30.glGetUniformLocation(mProgramHandle, "u_CoeffMatrixRed");
+        GLES30.glUniformMatrix4fv(mCoeffMatrixRedHandle, 1, false, mCoefficientMatrix[0], 0);
+        int mCoeffMatrixGreenHandle = GLES30.glGetUniformLocation(mProgramHandle, "u_CoeffMatrixGreen");
+        GLES30.glUniformMatrix4fv(mCoeffMatrixGreenHandle, 1, false, mCoefficientMatrix[1], 0);
+        int mCoeffMatrixBlueHandle = GLES30.glGetUniformLocation(mProgramHandle, "u_CoeffMatrixBlue");
+        GLES30.glUniformMatrix4fv(mCoeffMatrixBlueHandle, 1, false, mCoefficientMatrix[2], 0);
 
-        int mLightDirectionHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_LightDirection");
-        GLES20.glUniform3fv(mLightDirectionHandle, 1, lightDirection,0);
+        int mLightDirectionHandle = GLES30.glGetUniformLocation(mProgramHandle, "u_LightDirection");
+        GLES30.glUniform3fv(mLightDirectionHandle, 1, lightDirection,0);
 
     */
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6);
+        GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, 6);
 
-        GLES20.glDisableVertexAttribArray(mPositionHandle);
+        GLES30.glDisableVertexAttribArray(mPositionHandle);
 
     }
 
