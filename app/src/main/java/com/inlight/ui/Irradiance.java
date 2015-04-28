@@ -38,12 +38,12 @@ public class Irradiance  {
                 u = (j - height/2.0f)/(height/2.0f); /* u ranges from -1 to 1 */
                 r = Math.sqrt(u*u + v*v) ; /* The "radius" */
                 if (r <= 1.0) { /* Consider only circle with r<1 */
-                    theta = Math.PI*r ; /* theta parameter of (i,j) */
+                    theta = Math.PI/2.0*r ; /* theta parameter of (i,j) */
                     phi = Math.atan2(v,u) ; /* phi parameter */
                     x = Math.sin(theta)*Math.cos(phi) ; /* Cartesian components */
                     y = Math.sin(theta)*Math.sin(phi) ;
                     z = Math.cos(theta) ;
-                    domega = (2*Math.PI/width)*(2*Math.PI/width)*sinc(theta) ;
+                    domega = (2*Math.PI/width)*(Math.PI/height)*sinc(theta) ;
                     for (int channel = 0 ; channel < 3 ; channel++) {
                         double c ; /* A different constant for each coefficient */
 /* L_{00}. Note that Y_{00} = 0.282095 */

@@ -77,10 +77,10 @@ public class RenderActivity extends Activity{
         super.onPause();
         mRenderManager.onPause();
     }
-    public int getTextureResourceId(){
-        return mImageResIds[pos];
-    }
-    public int getBumpResourceId(){
-        return mBumpResIds[pos];
+    @Override
+    public void onBackPressed(){
+        Intent i=new Intent(this, GridActivity.class);
+        i.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivity(i);
     }
 }
