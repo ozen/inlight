@@ -19,9 +19,9 @@ void main()
     irradiance.g = dot(normal, u_CoeffMatrixGreen * normal);
     irradiance.b = dot(normal, u_CoeffMatrixBlue *normal);
 
-    vec4 materialDiffuse = vec4(0.8);
-    vec4 materialEmissive=vec4(0.02);
-    vec4 ambient = vec4(0.05);
+    vec4 materialDiffuse = vec4(0.5);
+    vec4 materialEmissive=vec4(0.001);
+    vec4 ambient = vec4(0.04);
 
     vec4 diffuse =  irradiance * materialDiffuse;
     vec4 emissive = materialEmissive;
