@@ -11,7 +11,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.inlight.R;
-import com.inlight.ui.Irradiance;
+import com.inlight.calc.Irradiance;
 import com.inlight.util.RawResourceReader;
 import com.inlight.util.ShaderHelper;
 import com.inlight.util.TextureHelper;
