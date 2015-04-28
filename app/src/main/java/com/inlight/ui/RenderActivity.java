@@ -26,8 +26,12 @@ public class RenderActivity extends Activity{
             R.drawable.fabric_6164_bump,
             R.drawable.fabric_6447_bump};
 
+    public final static Integer[] mSpecularResIds = new Integer[] {
+            R.drawable.fabric_5510_specular,
+            R.drawable.fabric_6164_specular,
+            R.drawable.fabric_6447_specular};
 
-	@Override
+    @Override
 	public void onCreate(Bundle savedInstanceState) 
 	{
 
@@ -48,7 +52,8 @@ public class RenderActivity extends Activity{
 			mGLSurfaceView.setEGLContextClientVersion(2);
 
 			// Set the renderer to our demo renderer, defined below.
-            mRenderManager = new RenderManager(this, mGLSurfaceView, mImageResIds[pos], mBumpResIds[pos]);
+            mRenderManager = new RenderManager(this, mGLSurfaceView, mImageResIds[pos],
+                    mBumpResIds[pos], mSpecularResIds[pos]);
 			mGLSurfaceView.setRenderer(mRenderManager);
 		} 
 		else 

@@ -43,13 +43,15 @@ public class RenderManager implements GLSurfaceView.Renderer,
     private float[] lightDirection;
     private int mTextureResId;
     private int mBumpResId;
+    private int mSpecularResId;
     private long lastTime = -1;
 
-    public RenderManager(Context c, GLSurfaceView v, int texResId, int bumpResId){
+    public RenderManager(Context c, GLSurfaceView v, int texResId, int bumpResId, int specularResId){
         mContext = c;
         mView = v;
         mTextureResId = texResId;
         mBumpResId = bumpResId;
+        mSpecularResId = specularResId;
 
         //   Camera.Size s = mCamera.getParameters().getPictureSize();
         //  Log.d(TAG, "w =  " + s.width + "   h = " +  s.height);
@@ -148,7 +150,7 @@ public class RenderManager implements GLSurfaceView.Renderer,
         Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, -5.0f);
         Matrix.multiplyMM(mMVMatrix,0,mViewMatrix, 0, mModelMatrix,0);
 
-        mTextureDataHandle = TextureHelper.loadTexture(mContext, mTextureResId, mBumpResId);
+        mTextureDataHandle = TextureHelper.loadTexture(mContext, mTextureResId, mBumpResId, mSpecularResId);
 
 
         mCamera.takePicture(null, null, this);
