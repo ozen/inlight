@@ -18,47 +18,59 @@ public class SH {
     private static double fresnel = 0.2;
 
 
-
     public static double[][][] computeBRDFCoefs(Context ctx) {
 
-           generateSampleVectors(1000);
-           projectBRDF();
+        generateSampleVectors(1000);
+        projectBRDF();
 
-           return brdfCoefs;
+        return brdfCoefs;
     }
 
-    public static double[][] computeLightCoefs(Bitmap bitmap){
-        generateSampleVectors(1000);
+    public static double[][] computeLightCoefs(Bitmap bitmap) {
         double lightCoefs[][] = new double[9][3];
-        for (int col = 0; col < 3; col++) {
+        int width = envNormals.length;
+        int height = envNormals[0].length;
 
-            for (Vector3D L : sampleVectors) {
+        for (int band = 0; band < 3; band++) {
 
-                double light;
-                if (L.z >= 0) {
-                    light = getLight(bitmap, L, col);
-                } else {
-                    light = getLight(bitmap, L.zmirror(), col);
-                }
-                if (light < 0.000001) continue;
-                int coefNo = 0;
-                for (int l = 0; l <= 2; l++) {
-                    for (int m = -l; m <= l; m++) {
-                        lightCoefs[coefNo++][col] += light * yml(l, m, L.x, L.y, L.z);
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
+                    Vector3D L = envNormals[x][y];
+                    int light = bitmap.getPixel(x, y);
+                    int value = 0;
+
+                    switch (band) {
+                        case 0:
+                            value = Color.red(light);
+                            break;
+                        case 1:
+                            value = Color.green(light);
+                            break;
+                        case 2:
+                            value = Color.blue(light);
+                            break;
+                    }
+
+                    int coefNo = 0;
+                    for (int l = 0; l <= 2; l++) {
+                        for (int m = -l; m <= l; m++) {
+                            lightCoefs[coefNo++][band] += value * yml(l, m, L.x, L.y, L.z);
+                        }
                     }
                 }
             }
 
             for (int k = 0; k < 9; k++) {
-                lightCoefs[k][col] *= (4 * Math.PI) / sampleVectors.size();
+                lightCoefs[k][band] *= (4 * Math.PI) / (width * height);
             }
         }
+
         return lightCoefs;
     }
 
 
     private static void projectBRDF() {
-     //   System.out.println("Calculating BRDF SH projection.");
+        //   System.out.println("Calculating BRDF SH projection.");
         long startTime = System.currentTimeMillis();
         Vector3D V = new Vector3D(0.0, 0.0, 1.0);
         for (int t = 0; t < 33; t++) {
@@ -87,7 +99,7 @@ public class SH {
                 }
             }
         }
-       // System.out.format("BRDF SH projection completed in %d seconds.\n", (System.currentTimeMillis() - startTime) / 1000);
+        // System.out.format("BRDF SH projection completed in %d seconds.\n", (System.currentTimeMillis() - startTime) / 1000);
     }
 
     private static void generateSampleVectors(int N) {
@@ -103,6 +115,7 @@ public class SH {
             }
         }
     }
+
     private static void writeBRDFToFile() {
         try {
             URL url = getClass().getResource("brdf_sh_coef.obj");
@@ -116,6 +129,7 @@ public class SH {
             ioe.printStackTrace();
         }
     }
+
     private static void readBRDFFromFile() {
         try {
 
@@ -133,6 +147,7 @@ public class SH {
             c.printStackTrace();
         }
     }
+
     private static double yml(int l, int m, double x, double y, double z) {
         if (l == 0 && m == 0) {
             return 0.282095;
@@ -163,6 +178,7 @@ public class SH {
         }
         return 0;
     }
+
     private static double checkBRDF(Vector3D V, Vector3D L, Vector3D N) {
         double brdf = BRDF.brdf(V, L, N, roughness, fresnel);
         int[] index = cart2index(new double[]{N.x, N.y, N.z});
@@ -216,26 +232,35 @@ public class SH {
         System.out.println("Reading environment map normals completed.");
     }
 
-    private static double getColor(Bitmap bitmap, int i, int j, int ch){
-        int col = bitmap.getPixel(i,j);
-        int chCol=0;
-        switch(ch){
-            case 0: chCol = Color.red(col); break;
-            case 1: chCol = Color.green(col); break;
-            case 2: chCol = Color.blue(col); break;
+    private static double getColor(Bitmap bitmap, int i, int j, int ch) {
+        int col = bitmap.getPixel(i, j);
+        int chCol = 0;
+        switch (ch) {
+            case 0:
+                chCol = Color.red(col);
+                break;
+            case 1:
+                chCol = Color.green(col);
+                break;
+            case 2:
+                chCol = Color.blue(col);
+                break;
         }
-        return chCol/255.0;
+        return chCol / 255.0;
 
     }
-    private static double getLight(Bitmap bitmap, Vector3D vec, int col){
+
+    private static double getLight(Bitmap bitmap, Vector3D vec, int col) {
 
         return 0.0;
     }
+
     private static double[] index2sph(int[] index) {
         double theta = (index[0] - 16) * (Math.PI / 32);
         double phi = (index[1] - 16) * (Math.PI / 32);
         return new double[]{theta, phi};
     }
+
     private static int[] sph2index(double[] sph) {
         if (sph[0] > Math.PI / 2 || sph[0] < -Math.PI / 2 || sph[1] > Math.PI / 2 || sph[1] < -Math.PI / 2) {
             return new int[]{};
@@ -245,12 +270,14 @@ public class SH {
             return new int[]{t, p};
         }
     }
+
     private static double[] sph2cart(double[] sph) {
         double x = Math.sin(sph[0]) * Math.cos(sph[1]);
         double y = Math.sin(sph[0]) * Math.sin(sph[1]);
         double z = Math.cos(sph[0]);
         return new double[]{x, y, z};
     }
+
     private static double[] cart2sph(double[] cart) {
         double r = Math.sqrt(cart[0] * cart[0] + cart[1] * cart[1] + cart[2] * cart[2]);
         double theta = Math.acos(cart[2] / r);
@@ -258,9 +285,11 @@ public class SH {
         double phi = Math.atan(cart[1] / cart[0]);
         return new double[]{theta, phi};
     }
+
     private static double[] index2cart(int[] index) {
         return sph2cart(index2sph(index));
     }
+
     private static int[] cart2index(double[] cart) {
         return sph2index(cart2sph(cart));
     }
