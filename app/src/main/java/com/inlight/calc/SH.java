@@ -1,27 +1,34 @@
 package com.inlight.calc;
 
 
-import android.util.Log;
+import android.content.Context;
+
+import java.net.URL;
 import java.util.ArrayList;
 
-
 public class SH {
-    Vector3D[][] envNormals;
-    ArrayList<Vector3D> sampleVectors = new ArrayList<>();
-    double brdfCoefs[][][] = new double[33][33][9];
-    double roughness = 3.6;
-    double fresnel = 0.2;
+    private static Vector3D[][] envNormals;
+    private static ArrayList<Vector3D> sampleVectors = new ArrayList<>();
+    private static double brdfCoefs[][][] = new double[33][33][9];
+    private static double roughness = 3.6;
+    private static double fresnel = 0.2;
 
-    public void compute() {
 
-      generateSampleVectors(1000);
-      projectBRDF();
 
+    public static double[][][] computeBRDFCoefs(Context ctx) {
+
+           generateSampleVectors(1000);
+           projectBRDF();
+
+           return brdfCoefs;
     }
 
+    public static double[] computeLightCoefs(){
+        
+    }
 
-    void projectBRDF() {
-       // Log.d("Calculating BRDF SH projection.");
+    private static void projectBRDF() {
+     //   System.out.println("Calculating BRDF SH projection.");
         long startTime = System.currentTimeMillis();
         Vector3D V = new Vector3D(0.0, 0.0, 1.0);
         for (int t = 0; t < 33; t++) {
@@ -50,10 +57,10 @@ public class SH {
                 }
             }
         }
-      // Log.d("BRDF SH projection completed in %d seconds.\n", (System.currentTimeMillis() - startTime) / 1000);
+       // System.out.format("BRDF SH projection completed in %d seconds.\n", (System.currentTimeMillis() - startTime) / 1000);
     }
 
-    void generateSampleVectors(int N) {
+    private static void generateSampleVectors(int N) {
         int sqN = (int) Math.sqrt(N);
         double oneover = 1.0 / sqN;
         for (int a = 0; a < sqN; a++) {
@@ -66,8 +73,37 @@ public class SH {
             }
         }
     }
+    private static void writeBRDFToFile() {
+        try {
+            URL url = getClass().getResource("brdf_sh_coef.obj");
+            File file = new File(url.getPath());
+            FileOutputStream fos = new FileOutputStream(file);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(brdfCoefs);
+            oos.close();
+            fos.close();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+    private static void readBRDFFromFile() {
+        try {
 
-    private double yml(int l, int m, double x, double y, double z) {
+            URL url = getClass().getResource("brdf_sh_coef.obj");
+            File file = new File(url.getPath());
+            FileInputStream fis = new FileInputStream(file);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            brdfCoefs = (double[][][]) ois.readObject();
+            ois.close();
+            fis.close();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } catch (ClassNotFoundException c) {
+            System.out.println("Class not found");
+            c.printStackTrace();
+        }
+    }
+    private static double yml(int l, int m, double x, double y, double z) {
         if (l == 0 && m == 0) {
             return 0.282095;
         }
@@ -97,7 +133,7 @@ public class SH {
         }
         return 0;
     }
-    private double checkBRDF(Vector3D V, Vector3D L, Vector3D N) {
+    private static double checkBRDF(Vector3D V, Vector3D L, Vector3D N) {
         double brdf = BRDF.brdf(V, L, N, roughness, fresnel);
         int[] index = cart2index(new double[]{N.x, N.y, N.z});
         double expansion = 0;
@@ -107,10 +143,48 @@ public class SH {
                 expansion += yml(l, m, L.x, L.y, L.z) * brdfCoefs[index[0]][index[1]][coefNo++];
             }
         }
-        //   Log.d("Direct: %f - Expansion: %f\n", brdf, expansion);
+        System.out.format("Direct: %f - Expansion: %f\n", brdf, expansion);
         return expansion;
     }
 
+    private static void readEnvNormals() {
+        System.out.println("Reading environment map normals from file.");
+        int M, N;
+        URL url = getClass().getResource("normals.txt");
+        File file = new File(url.getPath());
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            String[] firstLine = reader.readLine().split(", ");
+            M = Integer.parseInt(firstLine[0]);
+            N = Integer.parseInt(firstLine[1]);
+            envNormals = new Vector3D[M][N];
+            String line;
+            int lineNo = 0;
+            while ((line = reader.readLine()) != null) {
+                String[] triplets = line.split(" , ");
+                for (int i = 0; i < M; i++) {
+                    String[] coords = triplets[i].split(" ");
+                    double x = Double.parseDouble(coords[0]);
+                    double y = Double.parseDouble(coords[1]);
+                    double z = Double.parseDouble(coords[2]);
+                    envNormals[lineNo][i] = new Vector3D(x, y, z);
+                }
+                ++lineNo;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+// do nothing
+            }
+        }
+        System.out.println("Reading environment map normals completed.");
+    }
 
     private static double[] index2sph(int[] index) {
         double theta = (index[0] - 16) * (Math.PI / 32);

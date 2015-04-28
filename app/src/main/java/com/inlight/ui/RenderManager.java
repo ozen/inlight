@@ -12,7 +12,7 @@ import android.util.Log;
 
 import com.inlight.R;
 import com.inlight.calc.Irradiance;
-import com.inlight.util.RawResourceReader;
+import com.inlight.util.RawResourceHelper;
 import com.inlight.util.ShaderHelper;
 import com.inlight.util.TextureHelper;
 
@@ -119,8 +119,8 @@ public class RenderManager implements GLSurfaceView.Renderer,
 
     private int getCompiledProgramHandle(){
         // Read shaders from file
-        final String vertexShaderSource = RawResourceReader.readTextFileFromRawResource(mContext, R.raw.inlight_vertex_shader);
-        final String fragmentShaderSource = RawResourceReader.readTextFileFromRawResource(mContext, R.raw.inlight_fragment_shader);
+        final String vertexShaderSource = RawResourceHelper.readTextFileFromRawResource(mContext, R.raw.inlight_vertex_shader);
+        final String fragmentShaderSource = RawResourceHelper.readTextFileFromRawResource(mContext, R.raw.inlight_fragment_shader);
         // Compile, link shaders
         final int vertexShaderHandle = ShaderHelper.compileShader(GLES20.GL_VERTEX_SHADER, vertexShaderSource);
 
