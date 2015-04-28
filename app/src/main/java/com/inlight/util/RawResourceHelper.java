@@ -107,7 +107,7 @@ public class RawResourceHelper {
         return brdfCoefs;
     }
 
-    private static Vector3D[][] readEnvNormals(Context context) {
+   public static Vector3D[][] readEnvNormals(Context context) {
         // System.out.println("Reading environment map normals from file.");
        Vector3D[][] envNormals = new Vector3D[0][];
         int M, N;

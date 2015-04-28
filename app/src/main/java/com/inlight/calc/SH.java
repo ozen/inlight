@@ -5,6 +5,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 
+import com.inlight.util.RawResourceHelper;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -27,8 +29,8 @@ public class SH {
            return brdfCoefs;
     }
 
-    public static double[][] computeLightCoefs(Bitmap bitmap){
-        generateSampleVectors(1000);
+    public static double[][] computeLightCoefs(Bitmap bitmap, Context ctx){
+        envNormals = RawResourceHelper.readEnvNormals(ctx);
         double lightCoefs[][] = new double[9][3];
         for (int col = 0; col < 3; col++) {
 
@@ -103,36 +105,7 @@ public class SH {
             }
         }
     }
-    private static void writeBRDFToFile() {
-        try {
-            URL url = getClass().getResource("brdf_sh_coef.obj");
-            File file = new File(url.getPath());
-            FileOutputStream fos = new FileOutputStream(file);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(brdfCoefs);
-            oos.close();
-            fos.close();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
-    }
-    private static void readBRDFFromFile() {
-        try {
 
-            URL url = getClass().getResource("brdf_sh_coef.obj");
-            File file = new File(url.getPath());
-            FileInputStream fis = new FileInputStream(file);
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            brdfCoefs = (double[][][]) ois.readObject();
-            ois.close();
-            fis.close();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        } catch (ClassNotFoundException c) {
-            System.out.println("Class not found");
-            c.printStackTrace();
-        }
-    }
     private static double yml(int l, int m, double x, double y, double z) {
         if (l == 0 && m == 0) {
             return 0.282095;
@@ -177,44 +150,7 @@ public class SH {
         return expansion;
     }
 
-    private static void readEnvNormals() {
-        System.out.println("Reading environment map normals from file.");
-        int M, N;
-        URL url = getClass().getResource("normals.txt");
-        File file = new File(url.getPath());
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(file));
-            String[] firstLine = reader.readLine().split(", ");
-            M = Integer.parseInt(firstLine[0]);
-            N = Integer.parseInt(firstLine[1]);
-            envNormals = new Vector3D[M][N];
-            String line;
-            int lineNo = 0;
-            while ((line = reader.readLine()) != null) {
-                String[] triplets = line.split(" , ");
-                for (int i = 0; i < M; i++) {
-                    String[] coords = triplets[i].split(" ");
-                    double x = Double.parseDouble(coords[0]);
-                    double y = Double.parseDouble(coords[1]);
-                    double z = Double.parseDouble(coords[2]);
-                    envNormals[lineNo][i] = new Vector3D(x, y, z);
-                }
-                ++lineNo;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (reader != null) {
-                    reader.close();
-                }
-            } catch (IOException e) {
-// do nothing
-            }
-        }
-        System.out.println("Reading environment map normals completed.");
-    }
+
 
     private static double getColor(Bitmap bitmap, int i, int j, int ch){
         int col = bitmap.getPixel(i,j);
