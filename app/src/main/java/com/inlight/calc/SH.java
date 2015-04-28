@@ -3,6 +3,7 @@ package com.inlight.calc;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ public class SH {
     private static Vector3D[][] envNormals;
     private static ArrayList<Vector3D> sampleVectors = new ArrayList<>();
     private static double brdfCoefs[][][] = new double[33][33][9];
+
     private static double roughness = 3.6;
     private static double fresnel = 0.2;
 
@@ -25,8 +27,33 @@ public class SH {
     }
 
     public static double[][] computeLightCoefs(Bitmap bitmap){
+        double lightCoefs[][] = new double[9][3];
+        for (int col = 0; col < 3; col++) {
 
+            for (Vector3D L : sampleVectors) {
+
+                double light;
+                if (L.z >= 0) {
+                    light = getLight(bitmap, L, col);
+                } else {
+                    light = getLight(bitmap, L.zmirror(), col);
+                }
+                if (light < 0.000001) continue;
+                int coefNo = 0;
+                for (int l = 0; l <= 2; l++) {
+                    for (int m = -l; m <= l; m++) {
+                        lightCoefs[coefNo++][col] += light * yml(l, m, L.x, L.y, L.z);
+                    }
+                }
+            }
+
+            for (int k = 0; k < 9; k++) {
+                lightCoefs[k][col] *= (4 * Math.PI) / sampleVectors.size();
+            }
+        }
+        return lightCoefs;
     }
+
 
     private static void projectBRDF() {
      //   System.out.println("Calculating BRDF SH projection.");
@@ -185,6 +212,18 @@ public class SH {
             }
         }
         System.out.println("Reading environment map normals completed.");
+    }
+
+    private static double getColor(Bitmap bitmap, int i, int j, int ch){
+        int col = bitmap.getPixel(i,j);
+        int chCol=0;
+        switch(ch){
+            case 0: chCol = Color.red(col); break;
+            case 1: chCol = Color.green(col); break;
+            case 2: chCol = Color.blue(col); break;
+        }
+        return chCol/255.0;
+
     }
 
     private static double[] index2sph(int[] index) {
