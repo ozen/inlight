@@ -3,6 +3,7 @@ package com.inlight.ui;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
@@ -17,6 +18,7 @@ import com.inlight.util.RawResourceHelper;
 import com.inlight.util.ShaderHelper;
 import com.inlight.util.TextureHelper;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -25,8 +27,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 
-public class RenderManager implements GLSurfaceView.Renderer,
-                                      Camera.PictureCallback {
+public class RenderManager implements GLSurfaceView.Renderer {
     public static final String TAG = "RenderManager";
 
     private Context mContext;
@@ -45,6 +46,7 @@ public class RenderManager implements GLSurfaceView.Renderer,
     private int mTextureResId;
     private int mBumpResId;
     private long lastTime = -1;
+    private CameraPreview mCameraPreview;
 
     public RenderManager(Context c, GLSurfaceView v, int texResId, int bumpResId){
         mContext = c;
@@ -63,46 +65,73 @@ public class RenderManager implements GLSurfaceView.Renderer,
     }
 
     public void onResume(){
-        if(mCamera == null) {
-            mCamera = Camera.open(findFrontFacingCameraId());
-
-        }
+        if(mCameraPreview == null)
+            mCameraPreview = new CameraPreview();
+        mCameraPreview.startPreview();
     }
 
     public void onPause(){
-        if (mCamera != null) {
-            mCamera.release();
-            mCamera = null;
-        }
+        mCameraPreview.stopPreview();
+        mCameraPreview.releaseCamera();
     }
 
-    @Override
-    public void onPictureTaken(byte[] data, Camera camera) {
 
-        final Bitmap pic = BitmapFactory.decodeByteArray(data, 0, data.length);
-        final Bitmap bitmap = Bitmap.createScaledBitmap(pic,140,140,true);
-        mIrradianceMatrix = SH.computeIrradianceMatrix(SH.computeLightCoefs(bitmap));
-
-        mView.requestRender();
-        mCamera.takePicture(null, null, this);
-        bitmap.recycle();
-    }
-
-    private int findFrontFacingCameraId() {
-        int cameraId = -1;
-        // Search for the front facing camera
-        int numberOfCameras = Camera.getNumberOfCameras();
-        for (int i = 0; i < numberOfCameras; i++) {
-            Camera.CameraInfo info = new Camera.CameraInfo();
-            Camera.getCameraInfo(i, info);
-            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                cameraId = i;
-                break;
+    class CameraPreview implements Camera.PreviewCallback{
+        public static final String TAG = "CameraPreview";
+        private Camera mCamera;
+        public CameraPreview() {
+            mCamera = getCameraInstance();
+            try {
+                // Yalandan SurfaceTexture veriyoruz bi tane
+                mCamera.setPreviewTexture(new SurfaceTexture(1));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+            mCamera.setPreviewCallback(this);
         }
-        return cameraId;
-    }
+        @Override
+        public void onPreviewFrame(byte[] data, Camera camera) {
+            final Bitmap pic = BitmapFactory.decodeByteArray(data, 0, data.length);
+            final Bitmap bitmap = Bitmap.createScaledBitmap(pic,140,140,true);
+            mIrradianceMatrix = SH.computeIrradianceMatrix(SH.computeLightCoefs(bitmap));
 
+            mView.requestRender();
+            bitmap.recycle();
+        }
+        public void startPreview(){
+            mCamera.startPreview();
+        }
+        public void stopPreview(){
+            mCamera.stopPreview();
+        }
+        public void releaseCamera(){
+            mCamera.release();
+        }
+        private Camera getCameraInstance(){
+            Camera c=null;
+            try {
+                c = Camera.open(findFrontFacingCameraId()); // attempt to get a Camera instance
+            }
+            catch (Exception e){
+                Log.e(TAG, "Camera is not available"); // Camera is not available (in use or does not exist)
+            }
+            return c;
+        }
+        private int findFrontFacingCameraId() {
+            int cameraId = -1;
+            // Search for the front facing camera
+            int numberOfCameras = Camera.getNumberOfCameras();
+            for (int i = 0; i < numberOfCameras; i++) {
+                Camera.CameraInfo info = new Camera.CameraInfo();
+                Camera.getCameraInfo(i, info);
+                if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                    cameraId = i;
+                    break;
+                }
+            }
+            return cameraId;
+        }
+    }
 
 
     private void setupRectangle(){
@@ -156,7 +185,7 @@ public class RenderManager implements GLSurfaceView.Renderer,
         mTextureDataHandle = TextureHelper.loadTexture(mContext, mTextureResId, mBumpResId);
 
 
-        mCamera.takePicture(null, null, this);
+
     }
 
     @Override
