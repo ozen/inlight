@@ -64,15 +64,15 @@ public class RenderManager implements GLSurfaceView.Renderer {
 
     public void onCreate(){
         SH.readEnvNormals(mContext);
-        mBRDFCoeffs = SH.computeBRDFCoefs();
-        //mBRDFCoeffs = RawResourceHelper.readBRDFFromFile(mContext);
+        //mBRDFCoeffs = SH.computeBRDFCoefs();
+        mBRDFCoeffs = RawResourceHelper.readBRDFFromFile(mContext);
     }
 
     public void onResume(){
         if(mCameraPreview == null)
             mCameraPreview = new CameraPreview();
         mCameraPreview.startPreview();
-        mCameraPreview.takePicture();
+
     }
 
     public void onPause(){
@@ -81,9 +81,10 @@ public class RenderManager implements GLSurfaceView.Renderer {
     }
 
 
-    class CameraPreview implements Camera.PictureCallback{
+    class CameraPreview implements Camera.PreviewCallback{
         public static final String TAG = "CameraPreview";
         private Camera mCamera;
+        private IrradianceComputeTask computeTask;
         public CameraPreview() {
             mCamera = getCameraInstance();
             try {
@@ -94,13 +95,13 @@ public class RenderManager implements GLSurfaceView.Renderer {
             }
 
         }
-        public void takePicture(){
-            mCamera.takePicture(null,null,this);
-        }
+
+
         @Override
-        public void onPictureTaken(byte[] data, Camera camera) {
-            final IrradianceComputeTask compTask = new IrradianceComputeTask();
-            compTask.execute(data);
+        public void onPreviewFrame(byte[] data, Camera camera) {
+            if(computeTask==null || computeTask.getStatus() == AsyncTask.Status.FINISHED )
+                computeTask = new IrradianceComputeTask();
+                computeTask.execute(data);
         }
 
         public void startPreview(){
@@ -138,6 +139,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
         }
 
 
+
     }
 
     class IrradianceComputeTask extends AsyncTask<byte[], Void, Bitmap> {
@@ -164,7 +166,6 @@ public class RenderManager implements GLSurfaceView.Renderer {
             }
 
             mView.requestRender();
-            mCameraPreview.takePicture();
             bitmap.recycle();
         }
 
