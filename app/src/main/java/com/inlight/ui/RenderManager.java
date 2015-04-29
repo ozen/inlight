@@ -8,8 +8,10 @@ import android.hardware.Camera;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.util.Log;
+import android.widget.ImageView;
 
 import com.inlight.R;
 import com.inlight.calc.Irradiance;
@@ -19,6 +21,7 @@ import com.inlight.util.ShaderHelper;
 import com.inlight.util.TextureHelper;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -62,12 +65,14 @@ public class RenderManager implements GLSurfaceView.Renderer {
     public void onCreate(){
         SH.readEnvNormals(mContext);
         mBRDFCoeffs = SH.computeBRDFCoefs();
+        //mBRDFCoeffs = RawResourceHelper.readBRDFFromFile(mContext);
     }
 
     public void onResume(){
         if(mCameraPreview == null)
             mCameraPreview = new CameraPreview();
         mCameraPreview.startPreview();
+        mCameraPreview.takePicture();
     }
 
     public void onPause(){
@@ -76,7 +81,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
     }
 
 
-    class CameraPreview implements Camera.PreviewCallback{
+    class CameraPreview implements Camera.PictureCallback{
         public static final String TAG = "CameraPreview";
         private Camera mCamera;
         public CameraPreview() {
@@ -87,17 +92,17 @@ public class RenderManager implements GLSurfaceView.Renderer {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            mCamera.setPreviewCallback(this);
+
+        }
+        public void takePicture(){
+            mCamera.takePicture(null,null,this);
         }
         @Override
-        public void onPreviewFrame(byte[] data, Camera camera) {
-            final Bitmap pic = BitmapFactory.decodeByteArray(data, 0, data.length);
-            final Bitmap bitmap = Bitmap.createScaledBitmap(pic,140,140,true);
-            mIrradianceMatrix = SH.computeIrradianceMatrix(SH.computeLightCoefs(bitmap));
-
-            mView.requestRender();
-            bitmap.recycle();
+        public void onPictureTaken(byte[] data, Camera camera) {
+            final IrradianceComputeTask compTask = new IrradianceComputeTask();
+            compTask.execute(data);
         }
+
         public void startPreview(){
             mCamera.startPreview();
         }
@@ -131,7 +136,43 @@ public class RenderManager implements GLSurfaceView.Renderer {
             }
             return cameraId;
         }
+
+
     }
+
+    class IrradianceComputeTask extends AsyncTask<byte[], Void, Bitmap> {
+
+
+
+        // Decode image in background.
+        @Override
+        protected Bitmap doInBackground(byte[]... params) {
+            byte[] data = params[0];
+            final Bitmap pic = BitmapFactory.decodeByteArray(data, 0, data.length);
+            final Bitmap bitmap = Bitmap.createScaledBitmap(pic,140,140,true);
+            mIrradianceMatrix = SH.computeIrradianceMatrix(SH.computeLightCoefs(bitmap));
+
+
+            return bitmap;
+        }
+
+        // Once complete, refresh the screen
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            if (isCancelled()) {
+                bitmap = null;
+            }
+
+            mView.requestRender();
+            mCameraPreview.takePicture();
+            bitmap.recycle();
+        }
+
+    }
+
+
+
+
 
 
     private void setupRectangle(){

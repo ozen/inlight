@@ -72,7 +72,7 @@ public class RawResourceHelper {
         return coeffs;
     }
 
-    private static void writeBRDFToFile(Context context) {
+    public static void writeBRDFToFile(Context context) {
       /*  try {
 
             File file = new File(url.getPath());
@@ -86,7 +86,7 @@ public class RawResourceHelper {
         }
         */
     }
-    private static double[][][] readBRDFFromFile(Context context) {
+    public static double[][][] readBRDFFromFile(Context context) {
         final int resourceId = R.raw.brdf_sh_coef;
         double brdfCoefs[][][] = new double[33][33][9];
         try {
