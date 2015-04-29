@@ -7,6 +7,7 @@ import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.os.AsyncTask;
 import android.os.SystemClock;
@@ -25,6 +26,7 @@ import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -44,7 +46,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
     private float[] mProjectionMatrix = new float[16];
     private float[] mMVMatrix = new float[16];
     private float[] mMVPMatrix = new float[16];
-    private double[][] mIrradianceMatrix = new double[3][16];
+    private double[][] mIrradianceMatrix = null;
     private double[][][] mBRDFCoeffs = new double[5][5][9];
     private int mTextureResId;
     private int mBumpResId;
@@ -64,8 +66,8 @@ public class RenderManager implements GLSurfaceView.Renderer {
 
     public void onCreate(){
         SH.readEnvNormals(mContext);
-        //mBRDFCoeffs = SH.computeBRDFCoefs();
-        mBRDFCoeffs = RawResourceHelper.readBRDFFromFile(mContext);
+        mBRDFCoeffs = SH.computeBRDFCoefs();
+//        mBRDFCoeffs = RawResourceHelper.readBRDFFromFile(mContext);
     }
 
     public void onResume(){
@@ -93,15 +95,18 @@ public class RenderManager implements GLSurfaceView.Renderer {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            mCamera.setPreviewCallback(this);
 
         }
 
 
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
-            if(computeTask==null || computeTask.getStatus() == AsyncTask.Status.FINISHED )
+            if(computeTask==null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
                 computeTask = new IrradianceComputeTask();
-                computeTask.execute(data);
+                byte[] preview = Arrays.copyOf(data, data.length);
+                computeTask.execute(preview);
+            }
         }
 
         public void startPreview(){
@@ -166,7 +171,10 @@ public class RenderManager implements GLSurfaceView.Renderer {
             }
 
             mView.requestRender();
-            bitmap.recycle();
+
+            if(bitmap != null) {
+                bitmap.recycle();
+            }
         }
 
     }
@@ -292,7 +300,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
 
         //mBRDFCoeffs
         int mBRDFCoeffsHandle = GLES20.glGetAttribLocation(mProgramHandle, "u_BRDFCoeffs");
-        GLES20.glUniform3fv(mBRDFCoeffsHandle, 225, mBRDFArray, 0 );
+        GLES20.glUniform3fv(mBRDFCoeffsHandle, 75, mBRDFArray, 0 );
 
     /*    int mCoeffMatrixRedHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_CoeffMatrixRed");
         GLES20.glUniformMatrix4fv(mCoeffMatrixRedHandle, 1, false, mCoefficientMatrix[0], 0);
