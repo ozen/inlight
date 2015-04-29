@@ -40,12 +40,12 @@ public class RenderActivity extends Activity{
 		// Check if the system supports OpenGL ES 2.0.
 		final ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 		final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
-		final boolean supportsEs3 = configurationInfo.reqGlEsVersion >= 0x30000;
+		final boolean supportsEs2 = configurationInfo.reqGlEsVersion >= 0x20000;
 
-		if (supportsEs3)
+		if (supportsEs2)
 		{
 			// Request an OpenGL ES 3.0 compatible context.
-			mGLSurfaceView.setEGLContextClientVersion(3);
+			mGLSurfaceView.setEGLContextClientVersion(2);
 
 			// Set the renderer to our demo renderer, defined below.
             mRenderManager = new RenderManager(this, mGLSurfaceView, mImageResIds[pos],
@@ -54,7 +54,7 @@ public class RenderActivity extends Activity{
 		} 
 		else 
 		{
-            Log.e("rgew", "es3 not supported!!!");
+            Log.e("rgew", "GLES version mismatch!!!");
 			return;
 		}
 

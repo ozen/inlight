@@ -93,14 +93,14 @@ public class SH {
     public static double[][][] computeBRDFCoefs() {
      //   System.out.println("Calculating BRDF SH projection.");
         ArrayList<Vector3D> sampleVectors = generateSampleVectors(1000);
-        double brdfCoefs[][][] = new double[33][33][9];
+        double brdfCoefs[][][] = new double[5][5][9];
         double roughness = 3.6;
         double fresnel = 0.2;
 
         long startTime = System.currentTimeMillis();
         Vector3D V = new Vector3D(0.0, 0.0, 1.0);
-        for (int t = 0; t < 33; t++) {
-            for (int p = 0; p < 33; p++) {
+        for (int t = 0; t < 5; t++) {
+            for (int p = 0; p < 5; p++) {
                 Vector3D N = new Vector3D(index2cart(new int[]{t, p}));
                 for (int k = 0; k < 9; k++) {
                     brdfCoefs[t][p][k] = 0;
@@ -179,16 +179,16 @@ public class SH {
 
 
     private static double[] index2sph(int[] index) {
-        double theta = (index[0] - 16) * (Math.PI / 32);
-        double phi = (index[1] - 16) * (Math.PI / 32);
+        double theta = (index[0] - 2) * (Math.PI / 4);
+        double phi = (index[1] - 2) * (Math.PI / 4);
         return new double[]{theta, phi};
     }
     private static int[] sph2index(double[] sph) {
         if (sph[0] > Math.PI / 2 || sph[0] < -Math.PI / 2 || sph[1] > Math.PI / 2 || sph[1] < -Math.PI / 2) {
             return new int[]{};
         } else {
-            int t = Math.round((float) (sph[0] * (32.0 / Math.PI)) + 16);
-            int p = Math.round((float) (sph[1] * (32.0 / Math.PI)) + 16);
+            int t = Math.round((float) (sph[0] * (4.0 / Math.PI)) + 2);
+            int p = Math.round((float) (sph[1] * (4.0 / Math.PI)) + 2);
             return new int[]{t, p};
         }
     }
