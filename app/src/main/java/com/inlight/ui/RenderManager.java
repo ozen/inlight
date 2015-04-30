@@ -106,8 +106,8 @@ public class RenderManager implements GLSurfaceView.Renderer {
         public void onPictureTaken(byte[] data, Camera camera) {
             if(computeTask==null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
                 computeTask = new IrradianceComputeTask();
-                byte[] preview = Arrays.copyOf(data, data.length);
-                computeTask.execute(preview);
+                byte[] pic = Arrays.copyOf(data, data.length);
+                computeTask.execute(pic);
             }
         }
 /*
