@@ -74,6 +74,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
         if(mCameraPreview == null)
             mCameraPreview = new CameraPreview();
         mCameraPreview.startPreview();
+        mCameraPreview.takePicture();
 
     }
 
@@ -83,7 +84,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
     }
 
 
-    class CameraPreview implements Camera.PreviewCallback{
+    class CameraPreview implements Camera.PictureCallback{
         public static final String TAG = "CameraPreview";
         private Camera mCamera;
         private IrradianceComputeTask computeTask;
@@ -95,11 +96,21 @@ public class RenderManager implements GLSurfaceView.Renderer {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            mCamera.setPreviewCallback(this);
+            //mCamera.setPreviewCallback(this);
 
         }
-
-
+        public void takePicture(){
+            mCamera.takePicture(null,null,this);
+        }
+        @Override
+        public void onPictureTaken(byte[] data, Camera camera) {
+            if(computeTask==null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
+                computeTask = new IrradianceComputeTask();
+                byte[] preview = Arrays.copyOf(data, data.length);
+                computeTask.execute(preview);
+            }
+        }
+/*
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
             if(computeTask==null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
@@ -108,7 +119,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
                 computeTask.execute(preview);
             }
         }
-
+*/
         public void startPreview(){
             mCamera.startPreview();
         }
@@ -121,14 +132,16 @@ public class RenderManager implements GLSurfaceView.Renderer {
         private Camera getCameraInstance(){
             Camera c=null;
             try {
-                c = Camera.open(findFrontFacingCameraId()); // attempt to get a Camera instance
+                c = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT); // attempt to get a Camera instance
             }
             catch (Exception e){
                 Log.e(TAG, "Camera is not available"); // Camera is not available (in use or does not exist)
             }
             return c;
         }
-        private int findFrontFacingCameraId() {
+
+
+      /*  private int findFrontFacingCameraId() {
             int cameraId = -1;
             // Search for the front facing camera
             int numberOfCameras = Camera.getNumberOfCameras();
@@ -142,6 +155,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
             }
             return cameraId;
         }
+        */
 
 
 
@@ -166,15 +180,15 @@ public class RenderManager implements GLSurfaceView.Renderer {
         // Once complete, refresh the screen
         @Override
         protected void onPostExecute(Bitmap bitmap) {
-            if (isCancelled()) {
-                bitmap = null;
-            }
+
 
             mView.requestRender();
 
             if(bitmap != null) {
                 bitmap.recycle();
             }
+            mCameraPreview.startPreview();
+            mCameraPreview.takePicture();
         }
 
     }
