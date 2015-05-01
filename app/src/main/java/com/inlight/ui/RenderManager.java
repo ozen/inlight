@@ -82,8 +82,6 @@ public class RenderManager implements GLSurfaceView.Renderer {
         if(mCameraPreview == null)
             mCameraPreview = new CameraPreview();
         mCameraPreview.startPreview();
-        mCameraPreview.takePicture();
-
     }
 
     public void onPause(){
@@ -100,22 +98,12 @@ public class RenderManager implements GLSurfaceView.Renderer {
             mCamera = getCameraInstance();
             try {
                 // Yalandan SurfaceTexture veriyoruz bi tane
-                mCamera.setPreviewTexture(new SurfaceTexture(1));
+                mCamera.setPreviewTexture(new SurfaceTexture(7));
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            Camera.Parameters params = mCamera.getParameters();
-            List<Camera.Size> supportedSizes = params.getSupportedPictureSizes();
-            Camera.Size selectedSize= supportedSizes.get(0);
-            for(Camera.Size size: supportedSizes){
 
-                if(size.width >= 140 && size.height>=140 && size.width< selectedSize.width)
-                    selectedSize = size;
-            }
-
-            params.setPictureSize(selectedSize.width, selectedSize.height);
-            mCamera.setParameters(params);
-            //mCamera.setPreviewCallback(this);
+            mCamera.setPreviewCallback(this);
 
         }
 
@@ -124,8 +112,8 @@ public class RenderManager implements GLSurfaceView.Renderer {
         public void onPreviewFrame(byte[] data, Camera camera) {
             if(computeTask==null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
                 computeTask = new IrradianceComputeTask();
-                byte[] preview = Arrays.copyOf(data, data.length);
-                computeTask.execute(preview);
+            //    byte[] preview = Arrays.copyOf(data, data.length);
+                computeTask.execute(data);
             }
         }
 
@@ -149,24 +137,6 @@ public class RenderManager implements GLSurfaceView.Renderer {
             return c;
         }
 
-
-
-
-      /*  private int findFrontFacingCameraId() {
-            int cameraId = -1;
-            // Search for the front facing camera
-            int numberOfCameras = Camera.getNumberOfCameras();
-            for (int i = 0; i < numberOfCameras; i++) {
-                Camera.CameraInfo info = new Camera.CameraInfo();
-                Camera.getCameraInfo(i, info);
-                if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                    cameraId = i ;
-                    break;
-                }
-            }
-            return cameraId;
-        }
-        */
     }
 
     class IrradianceComputeTask extends AsyncTask<byte[], Void, Bitmap> {
@@ -191,8 +161,6 @@ public class RenderManager implements GLSurfaceView.Renderer {
             if(bitmap != null) {
                 bitmap.recycle();
             }
-            mCameraPreview.startPreview();
-            mCameraPreview.takePicture();
         }
 
     }
