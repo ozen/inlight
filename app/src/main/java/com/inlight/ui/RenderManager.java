@@ -3,7 +3,10 @@ package com.inlight.ui;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -21,6 +24,7 @@ import com.inlight.util.RawResourceHelper;
 import com.inlight.util.ShaderHelper;
 import com.inlight.util.TextureHelper;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
@@ -95,7 +99,15 @@ public class RenderManager implements GLSurfaceView.Renderer {
         private Camera mCamera;
         private IrradianceComputeTask computeTask;
         public CameraPreview() {
-            mCamera = getCameraInstance();
+
+            try {
+                mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT); // attempt to get a Camera instance
+            }
+            catch (Exception e){
+                Log.e(TAG, "Camera is not available"); // Camera is not available (in use or does not exist)
+            }
+
+
             try {
                 // Yalandan SurfaceTexture veriyoruz bi tane
                 mCamera.setPreviewTexture(new SurfaceTexture(7));
@@ -111,6 +123,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
             if(computeTask==null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
+
                 computeTask = new IrradianceComputeTask();
             //    byte[] preview = Arrays.copyOf(data, data.length);
                 computeTask.execute(data);
@@ -126,26 +139,28 @@ public class RenderManager implements GLSurfaceView.Renderer {
         public void releaseCamera(){
             mCamera.release();
         }
-        private Camera getCameraInstance(){
-            Camera c=null;
-            try {
-                c = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT); // attempt to get a Camera instance
-            }
-            catch (Exception e){
-                Log.e(TAG, "Camera is not available"); // Camera is not available (in use or does not exist)
-            }
-            return c;
+        public Camera.Size getPreviewSize(){
+            return mCamera.getParameters().getPreviewSize();
         }
-
     }
 
     class IrradianceComputeTask extends AsyncTask<byte[], Void, Bitmap> {
         // Decode image in background.
         @Override
         protected Bitmap doInBackground(byte[]... params) {
+
             byte[] data = params[0];
-            final Bitmap pic = BitmapFactory.decodeByteArray(data, 0, data.length);
-            final Bitmap bitmap = Bitmap.createScaledBitmap(pic,140,140,true);
+            // Convert to JPG
+            Camera.Size previewSize = mCameraPreview.getPreviewSize();
+            YuvImage yuvimage=new YuvImage(data, ImageFormat.NV21, previewSize.width, previewSize.height, null);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            yuvimage.compressToJpeg(new Rect(0, 0, previewSize.width, previewSize.height), 80, baos);
+            byte[] jdata = baos.toByteArray();
+
+            // Convert to Bitmap
+            Bitmap bmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
+
+            final Bitmap bitmap = Bitmap.createScaledBitmap(bmp,140,140,true);
             mIrradianceMatrix = SH.computeIrradianceMatrix(SH.computeLightCoefs(bitmap));
 
             return bitmap;
