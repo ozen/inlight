@@ -99,14 +99,19 @@ public class RenderManager implements GLSurfaceView.Renderer {
         private Camera mCamera;
         private IrradianceComputeTask computeTask;
         public CameraPreview() {
+            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+            int cameraCount = Camera.getNumberOfCameras();
+            for (int camIdx = 0; camIdx < cameraCount; camIdx++) {
+                Camera.getCameraInfo(camIdx, cameraInfo);
+                if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                    try {
+                        mCamera = Camera.open(camIdx);
+                    } catch (RuntimeException e) {
+                        Log.e(TAG, "Camera failed to open: " + e.getLocalizedMessage());
+                    }
+                }
+            }
 
-            try {
-                mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT); // attempt to get a Camera instance
-            }
-            catch (Exception e){
-                Log.e(TAG, "Camera is not available"); // Camera is not available (in use or does not exist)
-                e.printStackTrace();
-            }
 
 
             try {
@@ -121,6 +126,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
             } catch (IOException e) {
                 mCamera.release();
                 mCamera = null;
+                Log.e(TAG, "SurfaceTexture Problem: " + e.getLocalizedMessage());
                 e.printStackTrace();
             }
 
