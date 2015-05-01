@@ -13,6 +13,8 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.ImageView;
@@ -39,6 +41,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class RenderManager implements GLSurfaceView.Renderer {
     public static final String TAG = "RenderManager";
+    public static final String CAMERA_THREAD_NAME = "Cam_Thread";
 
     private Context mContext;
     private GLSurfaceView mView;
@@ -57,7 +60,10 @@ public class RenderManager implements GLSurfaceView.Renderer {
     private int mTextureResId;
     private int mBumpResId;
     private long lastTime = -1;
-    private CameraPreview mCameraPreview;
+    private HandlerThread mCameraThread;
+    private Handler mCameraHandler;
+    private IrradianceComputeTask computeTask;
+    private Camera.Size mPreviewSize;
 
     public RenderManager(Context c, GLSurfaceView v, int texResId, int bumpResId){
         mContext = c;
@@ -83,73 +89,69 @@ public class RenderManager implements GLSurfaceView.Renderer {
     }
 
     public void onResume(){
-        if(mCameraPreview == null)
-            mCameraPreview = new CameraPreview();
-        mCameraPreview.startPreview();
+        startCamera();
     }
 
     public void onPause(){
-        mCameraPreview.stopPreview();
-        mCameraPreview.releaseCamera();
+
     }
 
 
-    class CameraPreview implements Camera.PreviewCallback{
-        public static final String TAG = "CameraPreview";
-        private Camera mCamera;
-        private IrradianceComputeTask computeTask;
-        public CameraPreview() {
-            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-            int cameraCount = Camera.getNumberOfCameras();
-            for (int camIdx = 0; camIdx < cameraCount; camIdx++) {
-                Camera.getCameraInfo(camIdx, cameraInfo);
-                if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                    try {
-                        mCamera = Camera.open(camIdx);
-                    } catch (RuntimeException e) {
-                        Log.e(TAG, "Camera failed to open: " + e.getLocalizedMessage());
+
+    private void startCamera() {
+        if (mCameraThread == null) {
+            mCameraThread = new HandlerThread(CAMERA_THREAD_NAME);
+            mCameraThread.start();
+            mCameraHandler = new Handler(mCameraThread.getLooper());
+        }
+        mCameraHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+                int cameraCount = Camera.getNumberOfCameras();
+                for (int camIdx = 0; camIdx < cameraCount; camIdx++) {
+                    Camera.getCameraInfo(camIdx, cameraInfo);
+                    if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                        try {
+                            mCamera = Camera.open(camIdx);
+                        } catch (RuntimeException e) {
+                            Log.e(TAG, "Camera failed to open: " + e.getLocalizedMessage());
+                        }
                     }
                 }
+                mPreviewSize = mCamera.getParameters().getPreviewSize();
+
+                try {
+
+                    mCamera.setPreviewTexture(new SurfaceTexture(7));
+
+                    mCamera.addCallbackBuffer(createPreviewBuffer());
+                    mCamera.addCallbackBuffer(createPreviewBuffer());
+                    mCamera.addCallbackBuffer(createPreviewBuffer());
+
+                    mCamera.setPreviewCallbackWithBuffer(
+                            new Camera.PreviewCallback() {
+                                @Override
+                                public void onPreviewFrame(byte[] data, Camera camera) {
+                                    if (computeTask == null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
+                                        Log.d(TAG, "inside onPreviewFrame");
+                                        computeTask = new IrradianceComputeTask();
+                                        //    byte[] preview = Arrays.copyOf(data, data.length);
+                                        computeTask.execute(data);
+                                    }
+                                }
+                            });
+
+                } catch (IOException e) {
+                    mCamera.release();
+                    mCamera = null;
+                    Log.e(TAG, "SurfaceTexture Problem: " + e.getLocalizedMessage());
+                    e.printStackTrace();
+                }
             }
+        });
+    }
 
-
-            final int[] fakeTextureHandle = new int[1];
-            GLES20.glGenTextures(1, fakeTextureHandle, 0);
-
-            try {
-
-                mCamera.setPreviewTexture(new SurfaceTexture(fakeTextureHandle[0]));
-
-                mCamera.addCallbackBuffer(createPreviewBuffer());
-                mCamera.addCallbackBuffer(createPreviewBuffer());
-                mCamera.addCallbackBuffer(createPreviewBuffer());
-                mCamera.setPreviewCallbackWithBuffer(this);
-
-            } catch (IOException e) {
-                mCamera.release();
-                mCamera = null;
-                Log.e(TAG, "SurfaceTexture Problem: " + e.getLocalizedMessage());
-                e.printStackTrace();
-            }
-
-          //  mCamera.setPreviewCallback(this);
-
-        }
-
-
-        @Override
-        public void onPreviewFrame(byte[] data, Camera camera) {
-            if(computeTask==null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
-
-                computeTask = new IrradianceComputeTask();
-            //    byte[] preview = Arrays.copyOf(data, data.length);
-                computeTask.execute(data);
-            }
-        }
-        public void addCallbackBuffer(byte[] buf){
-            mCamera.addCallbackBuffer(buf);
-        }
-        //To create a buffer of the preview bytes size
         private byte[] createPreviewBuffer(){
             Log.d("Function", "previewBuffer iniciated");
             int bufferSize;
@@ -179,19 +181,6 @@ public class RenderManager implements GLSurfaceView.Renderer {
             return buffer;
         }
 
-        public void startPreview(){
-            mCamera.startPreview();
-        }
-        public void stopPreview(){
-            mCamera.stopPreview();
-        }
-        public void releaseCamera(){
-            mCamera.release();
-        }
-        public Camera.Size getPreviewSize(){
-            return mCamera.getParameters().getPreviewSize();
-        }
-    }
 
     class IrradianceComputeTask extends AsyncTask<byte[], Void, Bitmap> {
         // Decode image in background.
@@ -200,14 +189,14 @@ public class RenderManager implements GLSurfaceView.Renderer {
 
             byte[] data = params[0];
             // Convert to JPG
-            Camera.Size previewSize = mCameraPreview.getPreviewSize();
-            YuvImage yuvimage=new YuvImage(data, ImageFormat.NV21, previewSize.width, previewSize.height, null);
+
+            YuvImage yuvimage=new YuvImage(data, ImageFormat.NV21, mPreviewSize.width, mPreviewSize.height, null);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            yuvimage.compressToJpeg(new Rect(0, 0, previewSize.width, previewSize.height), 80, baos);
+            yuvimage.compressToJpeg(new Rect(0, 0, mPreviewSize.width, mPreviewSize.height), 80, baos);
             byte[] jdata = baos.toByteArray();
 
             //give back buffer
-            mCameraPreview.addCallbackBuffer(data);
+            mCamera.addCallbackBuffer(data);
             // Convert to Bitmap
             Bitmap bmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
 
