@@ -48,6 +48,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
     private float[] mMVPMatrix = new float[16];
     private double[][] mIrradianceMatrix = null;
     private double[][][] mBRDFCoeffs = new double[5][5][9];
+    private float[] mBRDFArray = new float[225];
     private int mTextureResId;
     private int mBumpResId;
     private long lastTime = -1;
@@ -68,6 +69,12 @@ public class RenderManager implements GLSurfaceView.Renderer {
         SH.readEnvNormals(mContext);
         mBRDFCoeffs = SH.computeBRDFCoefs();
 //        mBRDFCoeffs = RawResourceHelper.readBRDFFromFile(mContext);
+
+        for(int i=0;i<5;i++)
+            for(int j=0;j<5;j++)
+                for(int k=0;k<9;k++) {
+                    mBRDFArray[45*i+9*j+k] = (float) mBRDFCoeffs[i][j][k];
+                }
     }
 
     public void onResume(){
@@ -156,15 +163,9 @@ public class RenderManager implements GLSurfaceView.Renderer {
             return cameraId;
         }
         */
-
-
-
     }
 
     class IrradianceComputeTask extends AsyncTask<byte[], Void, Bitmap> {
-
-
-
         // Decode image in background.
         @Override
         protected Bitmap doInBackground(byte[]... params) {
@@ -172,7 +173,6 @@ public class RenderManager implements GLSurfaceView.Renderer {
             final Bitmap pic = BitmapFactory.decodeByteArray(data, 0, data.length);
             final Bitmap bitmap = Bitmap.createScaledBitmap(pic,140,140,true);
             mIrradianceMatrix = SH.computeIrradianceMatrix(SH.computeLightCoefs(bitmap));
-
 
             return bitmap;
         }
@@ -192,11 +192,6 @@ public class RenderManager implements GLSurfaceView.Renderer {
         }
 
     }
-
-
-
-
-
 
     private void setupRectangle(){
 
@@ -230,7 +225,6 @@ public class RenderManager implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
-
         mProgramHandle = getCompiledProgramHandle();
         GLES20.glUseProgram(mProgramHandle);
 
@@ -247,9 +241,6 @@ public class RenderManager implements GLSurfaceView.Renderer {
         Matrix.multiplyMM(mMVMatrix,0,mViewMatrix, 0, mModelMatrix,0);
 
         mTextureDataHandle = TextureHelper.loadTexture(mContext, mTextureResId, mBumpResId);
-
-
-
     }
 
     @Override
@@ -286,49 +277,25 @@ public class RenderManager implements GLSurfaceView.Renderer {
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[1]);
         GLES20.glUniform1i(mBumpUniformHandle, 1);
 
-
         int mPositionHandle = GLES20.glGetAttribLocation(mProgramHandle, "a_Position");
         GLES20.glEnableVertexAttribArray(mPositionHandle);
-        GLES20.glVertexAttribPointer(mPositionHandle, 2,
-                GLES20.GL_FLOAT, false, 0, vertexBuffer);
-
+        GLES20.glVertexAttribPointer(mPositionHandle, 2, GLES20.GL_FLOAT, false, 0, vertexBuffer);
 
         int mMVPHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_MVPMatrix");
         GLES20.glUniformMatrix4fv(mMVPHandle, 1, false, mMVPMatrix, 0);
 
-        //mIrradianceMatrix
         float[] mIrradianceArray = new float[48];
-
         for(int j=0;j<3;j++)
            for(int i=0;i<16;i++)
                mIrradianceArray[16*j+i] = (float) mIrradianceMatrix[j][i];
 
-        float[] mBRDFArray = new float[5*5*9];
-        for(int i=0;i<5;i++)
-            for(int j=0;j<5;j++)
-                for(int k=0;k<9;k++)
-                    mBRDFArray[9*5*i+9*j+k] = (float) mBRDFCoeffs[i][j][k];
-
         int mIrradianceMatrixHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_IrradianceMatrix");
         GLES20.glUniformMatrix4fv(mIrradianceMatrixHandle, 3, false, mIrradianceArray, 0);
 
-        //mBRDFCoeffs
-        int mBRDFCoeffsHandle = GLES20.glGetAttribLocation(mProgramHandle, "u_BRDFCoeffs");
-        GLES20.glUniform3fv(mBRDFCoeffsHandle, 75, mBRDFArray, 0 );
+        int mBRDFCoeffsHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_BRDFCoeffs");
+        GLES20.glUniform1fv(mBRDFCoeffsHandle, 225, mBRDFArray, 0);
 
-    /*    int mCoeffMatrixRedHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_CoeffMatrixRed");
-        GLES20.glUniformMatrix4fv(mCoeffMatrixRedHandle, 1, false, mCoefficientMatrix[0], 0);
-        int mCoeffMatrixGreenHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_CoeffMatrixGreen");
-        GLES20.glUniformMatrix4fv(mCoeffMatrixGreenHandle, 1, false, mCoefficientMatrix[1], 0);
-        int mCoeffMatrixBlueHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_CoeffMatrixBlue");
-        GLES20.glUniformMatrix4fv(mCoeffMatrixBlueHandle, 1, false, mCoefficientMatrix[2], 0);
-
-        int mLightDirectionHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_LightDirection");
-        GLES20.glUniform3fv(mLightDirectionHandle, 1, lightDirection,0);
-
-    */
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6);
-
         GLES20.glDisableVertexAttribArray(mPositionHandle);
 
     }
