@@ -112,13 +112,17 @@ public class RenderManager implements GLSurfaceView.Renderer {
             try {
                 // Yalandan SurfaceTexture veriyoruz bi tane
                 mCamera.setPreviewTexture(new SurfaceTexture(7));
+
+                mCamera.addCallbackBuffer(createPreviewBuffer());
+                mCamera.addCallbackBuffer(createPreviewBuffer());
+                mCamera.addCallbackBuffer(createPreviewBuffer());
+                mCamera.setPreviewCallbackWithBuffer(this);
+
             } catch (IOException e) {
+                mCamera.release();
+                mCamera = null;
                 e.printStackTrace();
             }
-            mCamera.addCallbackBuffer(createPreviewBuffer());
-            mCamera.addCallbackBuffer(createPreviewBuffer());
-            mCamera.addCallbackBuffer(createPreviewBuffer());
-            mCamera.setPreviewCallbackWithBuffer(this);
 
           //  mCamera.setPreviewCallback(this);
 
