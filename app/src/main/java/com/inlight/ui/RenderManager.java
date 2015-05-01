@@ -119,7 +119,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
             mCamera.addCallbackBuffer(createPreviewBuffer());
             mCamera.setPreviewCallbackWithBuffer(this);
 
-            mCamera.setPreviewCallback(this);
+          //  mCamera.setPreviewCallback(this);
 
         }
 
