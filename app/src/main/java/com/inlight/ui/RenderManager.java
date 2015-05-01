@@ -105,6 +105,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
             }
             catch (Exception e){
                 Log.e(TAG, "Camera is not available"); // Camera is not available (in use or does not exist)
+                e.printStackTrace();
             }
 
 
