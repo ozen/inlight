@@ -92,7 +92,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
     }
 
 
-    class CameraPreview implements Camera.PictureCallback{
+    class CameraPreview implements Camera.PreviewCallback{
         public static final String TAG = "CameraPreview";
         private Camera mCamera;
         private IrradianceComputeTask computeTask;
@@ -118,18 +118,8 @@ public class RenderManager implements GLSurfaceView.Renderer {
             //mCamera.setPreviewCallback(this);
 
         }
-        public void takePicture(){
-            mCamera.takePicture(null,null,this);
-        }
-        @Override
-        public void onPictureTaken(byte[] data, Camera camera) {
-            if(computeTask==null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
-                computeTask = new IrradianceComputeTask();
-               // byte[] pic = Arrays.copyOf(data, data.length);
-                computeTask.execute(data);
-            }
-        }
-/*
+
+
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
             if(computeTask==null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
@@ -138,7 +128,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
                 computeTask.execute(preview);
             }
         }
-*/
+
         public void startPreview(){
             mCamera.startPreview();
         }
@@ -158,6 +148,8 @@ public class RenderManager implements GLSurfaceView.Renderer {
             }
             return c;
         }
+
+
 
 
       /*  private int findFrontFacingCameraId() {
