@@ -113,10 +113,12 @@ public class RenderManager implements GLSurfaceView.Renderer {
             }
 
 
+            final int[] fakeTextureHandle = new int[1];
+            GLES20.glGenTextures(1, fakeTextureHandle, 0);
 
             try {
-                // Yalandan SurfaceTexture veriyoruz bi tane
-                mCamera.setPreviewTexture(new SurfaceTexture(7));
+
+                mCamera.setPreviewTexture(new SurfaceTexture(fakeTextureHandle[0]));
 
                 mCamera.addCallbackBuffer(createPreviewBuffer());
                 mCamera.addCallbackBuffer(createPreviewBuffer());
