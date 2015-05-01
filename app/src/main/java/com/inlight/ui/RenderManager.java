@@ -123,7 +123,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
 
                 try {
 
-                    mCamera.setPreviewTexture(new SurfaceTexture(7));
+                    mCamera.setPreviewTexture(new SurfaceTexture(10));
 
                     mCamera.addCallbackBuffer(createPreviewBuffer());
                     mCamera.addCallbackBuffer(createPreviewBuffer());
