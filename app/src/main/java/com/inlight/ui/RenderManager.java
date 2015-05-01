@@ -114,6 +114,10 @@ public class RenderManager implements GLSurfaceView.Renderer {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            mCamera.addCallbackBuffer(createPreviewBuffer());
+            mCamera.addCallbackBuffer(createPreviewBuffer());
+            mCamera.addCallbackBuffer(createPreviewBuffer());
+            mCamera.setPreviewCallbackWithBuffer(this);
 
             mCamera.setPreviewCallback(this);
 
@@ -128,6 +132,38 @@ public class RenderManager implements GLSurfaceView.Renderer {
             //    byte[] preview = Arrays.copyOf(data, data.length);
                 computeTask.execute(data);
             }
+        }
+        public void addCallBackBuffer(byte[] buf){
+            mCamera.addCallbackBuffer(buf);
+        }
+        //To create a buffer of the preview bytes size
+        private byte[] createPreviewBuffer(){
+            Log.d("Function", "previewBuffer iniciado");
+            int bufferSize;
+            byte buffer[];
+            int bitsPerPixel;
+
+            Camera.Parameters mParams= mCamera.getParameters();
+            Camera.Size mSize= mParams.getPreviewSize();
+            Log.d("Function", "previewBuffer: preview size="+ mSize.height+" "+mSize.width);
+            int mImageFormat= mParams.getPreviewFormat();
+
+            if(mImageFormat==ImageFormat.YV12){
+                int yStride   = (int) Math.ceil(mSize.width / 16.0) * 16;
+                int uvStride  = (int) Math.ceil( (yStride / 2) / 16.0) * 16;
+                int ySize     = yStride * mSize.height;
+                int uvSize    = uvStride * mSize.height / 2;
+                bufferSize      = ySize + uvSize * 2;
+                buffer=new byte[bufferSize];
+                Log.d("Function", "previewBuffer: buffer size="+ Integer.toString(bufferSize));
+                return buffer;
+            }
+
+            bitsPerPixel=ImageFormat.getBitsPerPixel(mImageFormat);
+            bufferSize= (int)(mSize.height*mSize.width*((bitsPerPixel/(float)8)));
+            buffer=new byte[bufferSize];
+            Log.d("Function", "previewBuffer: buffer size="+ Integer.toString(bufferSize));
+            return buffer;
         }
 
         public void startPreview(){
@@ -157,6 +193,8 @@ public class RenderManager implements GLSurfaceView.Renderer {
             yuvimage.compressToJpeg(new Rect(0, 0, previewSize.width, previewSize.height), 80, baos);
             byte[] jdata = baos.toByteArray();
 
+            //give back buffer
+            mCameraPreview.addCallBackBuffer(data);
             // Convert to Bitmap
             Bitmap bmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
 
