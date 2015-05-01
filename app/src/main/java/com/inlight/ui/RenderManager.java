@@ -133,12 +133,12 @@ public class RenderManager implements GLSurfaceView.Renderer {
                 computeTask.execute(data);
             }
         }
-        public void addCallBackBuffer(byte[] buf){
+        public void addCallbackBuffer(byte[] buf){
             mCamera.addCallbackBuffer(buf);
         }
         //To create a buffer of the preview bytes size
         private byte[] createPreviewBuffer(){
-            Log.d("Function", "previewBuffer iniciado");
+            Log.d("Function", "previewBuffer iniciated");
             int bufferSize;
             byte buffer[];
             int bitsPerPixel;
@@ -194,7 +194,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
             byte[] jdata = baos.toByteArray();
 
             //give back buffer
-            mCameraPreview.addCallBackBuffer(data);
+            mCameraPreview.addCallbackBuffer(data);
             // Convert to Bitmap
             Bitmap bmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
 
