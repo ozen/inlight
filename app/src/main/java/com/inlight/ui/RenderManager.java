@@ -109,7 +109,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
             Camera.Size selectedSize= supportedSizes.get(0);
             for(Camera.Size size: supportedSizes){
 
-                if(size.width >= 140 && size.width< selectedSize.width)
+                if(size.width >= 140 && size.height>=140 && size.width< selectedSize.width)
                     selectedSize = size;
             }
 
