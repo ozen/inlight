@@ -142,12 +142,14 @@ public class RenderManager implements GLSurfaceView.Renderer {
                                 }
                             });
 
+
                 } catch (IOException e) {
                     mCamera.release();
                     mCamera = null;
                     Log.e(TAG, "SurfaceTexture Problem: " + e.getLocalizedMessage());
                     e.printStackTrace();
                 }
+                mCamera.startPreview();
             }
         });
     }
