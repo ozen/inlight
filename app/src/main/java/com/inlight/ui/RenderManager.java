@@ -27,6 +27,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -96,6 +97,17 @@ public class RenderManager implements GLSurfaceView.Renderer {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            Camera.Parameters params = mCamera.getParameters();
+            List<Camera.Size> supportedSizes = params.getSupportedPictureSizes();
+            Camera.Size selectedSize= supportedSizes.get(0);
+            for(Camera.Size size: supportedSizes){
+
+                if(size.width >= 140 && size.width< selectedSize.width)
+                    selectedSize = size;
+            }
+
+            params.setPictureSize(selectedSize.width, selectedSize.height);
+            mCamera.setParameters(params);
             //mCamera.setPreviewCallback(this);
 
         }
@@ -106,8 +118,8 @@ public class RenderManager implements GLSurfaceView.Renderer {
         public void onPictureTaken(byte[] data, Camera camera) {
             if(computeTask==null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
                 computeTask = new IrradianceComputeTask();
-                byte[] pic = Arrays.copyOf(data, data.length);
-                computeTask.execute(pic);
+               // byte[] pic = Arrays.copyOf(data, data.length);
+                computeTask.execute(data);
             }
         }
 /*
