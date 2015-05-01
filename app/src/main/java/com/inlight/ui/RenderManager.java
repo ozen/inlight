@@ -168,7 +168,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
                 Camera.CameraInfo info = new Camera.CameraInfo();
                 Camera.getCameraInfo(i, info);
                 if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                    cameraId = i;
+                    cameraId = i ;
                     break;
                 }
             }
