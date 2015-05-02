@@ -17,6 +17,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.widget.ImageView;
 
 import com.inlight.R;
@@ -64,12 +66,13 @@ public class RenderManager implements GLSurfaceView.Renderer {
     private Handler mCameraHandler;
     private IrradianceComputeTask computeTask;
     private Camera.Size mPreviewSize;
-
-    public RenderManager(Context c, GLSurfaceView v, int texResId, int bumpResId){
+    private SurfaceView mDummyView;
+    public RenderManager(Context c, GLSurfaceView v, int texResId, int bumpResId, SurfaceView dummyView){
         mContext = c;
         mView = v;
         mTextureResId = texResId;
         mBumpResId = bumpResId;
+        mDummyView = dummyView;
 
         //   Camera.Size s = mCamera.getParameters().getPictureSize();
         //  Log.d(TAG, "w =  " + s.width + "   h = " +  s.height);
@@ -86,10 +89,64 @@ public class RenderManager implements GLSurfaceView.Renderer {
                 for(int k=0;k<9;k++) {
                     mBRDFArray[45*i+9*j+k] = (float) mBRDFCoeffs[i][j][k];
                 }
+
+        SurfaceHolder sHolder = mDummyView.getHolder();
+        //add the callback interface methods defined below as the Surface View callbacks
+        sHolder.addCallback(new HolderCallback());
+
+        //tells Android that this surface will have its data constantly replaced
+        sHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+    }
+
+    class HolderCallback implements SurfaceHolder.Callback{
+
+        @Override
+        public void surfaceCreated(SurfaceHolder holder) {
+            // The Surface has been created, acquire the camera and tell it where
+            // to draw the preview.
+            mCamera = Camera.open();
+            try {
+                mCamera.setPreviewDisplay(holder);
+
+            } catch (IOException exception) {
+                mCamera.release();
+                mCamera = null;
+            }
+        }
+
+        @Override
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+
+            mCamera.startPreview();
+
+            //sets what code should be executed after the picture is taken
+            Camera.PreviewCallback previewCallback= new Camera.PreviewCallback()
+            {
+
+                @Override
+                public void onPreviewFrame(byte[] data, Camera camera) {
+
+                }
+            };
+
+
+        }
+
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+
+            //stop the preview
+            mCamera.stopPreview();
+            //release the camera
+            mCamera.release();
+            //unbind the camera from this object
+            mCamera = null;
+        }
     }
 
     public void onResume(){
-        startCamera();
+
     }
 
     public void onPause(){
@@ -126,7 +183,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
 
                 try {
 
-                    mCamera.setPreviewTexture(new SurfaceTexture(fakeTextureHandle[0]));
+
 
                     mCamera.addCallbackBuffer(createPreviewBuffer());
                     mCamera.addCallbackBuffer(createPreviewBuffer());

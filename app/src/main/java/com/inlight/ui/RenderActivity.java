@@ -8,6 +8,9 @@ import android.content.pm.ConfigurationInfo;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.SurfaceView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.inlight.R;
 
@@ -15,6 +18,7 @@ public class RenderActivity extends Activity{
     public static final String EXTRA_IMAGE="POS";
     private RenderManager mRenderManager;
     private int pos;
+    private SurfaceView dummyView;
 
     public final static Integer[] mImageResIds = new Integer[] {
             R.drawable.fabric_5510,
@@ -33,7 +37,19 @@ public class RenderActivity extends Activity{
 
         super.onCreate(savedInstanceState);
 		Log.d("RenderActivity", "RenderActivity created");
+        setContentView(R.layout.activity_view);
+        LinearLayout layout = (LinearLayout)findViewById(R.id.screenLayout);
+
 	    GLSurfaceView mGLSurfaceView = new GLSurfaceView(this);
+        layout.addView(mGLSurfaceView);
+        dummyView = new SurfaceView(this);
+
+        layout.addView(dummyView);
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) dummyView.getLayoutParams();
+        params.height=64;
+        params.width=64;
+        dummyView.setLayoutParams(params);
+
         Intent intent = getIntent();
         pos = (int) intent.getExtras().get(EXTRA_IMAGE);
 
@@ -49,7 +65,7 @@ public class RenderActivity extends Activity{
 
 			// Set the renderer to our demo renderer, defined below.
             mRenderManager = new RenderManager(this, mGLSurfaceView, mImageResIds[pos],
-                    mBumpResIds[pos]);
+                    mBumpResIds[pos], dummyView);
 			mGLSurfaceView.setRenderer(mRenderManager);
 		} 
 		else 
@@ -58,8 +74,7 @@ public class RenderActivity extends Activity{
 			return;
 		}
      //   mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-		setContentView(mGLSurfaceView);
-        set
+
 
         mRenderManager.onCreate();
 
