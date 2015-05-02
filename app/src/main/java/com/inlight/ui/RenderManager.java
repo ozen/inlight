@@ -104,7 +104,22 @@ public class RenderManager implements GLSurfaceView.Renderer {
         public void surfaceCreated(SurfaceHolder holder) {
             // The Surface has been created, acquire the camera and tell it where
             // to draw the preview.
-            mCamera = Camera.open();
+
+            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+            int cameraCount = Camera.getNumberOfCameras();
+            for (int camIdx = 0; camIdx < cameraCount; camIdx++) {
+                Camera.getCameraInfo(camIdx, cameraInfo);
+                if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                    try {
+                        mCamera = Camera.open(camIdx);
+                    } catch (RuntimeException e) {
+                        Log.e(TAG, "Camera failed to open: " + e.getLocalizedMessage());
+                    }
+                }
+            }
+            mPreviewSize = mCamera.getParameters().getPreviewSize();
+
+
             try {
                 mCamera.setPreviewDisplay(holder);
 
@@ -118,18 +133,22 @@ public class RenderManager implements GLSurfaceView.Renderer {
         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 
 
-            mCamera.startPreview();
 
-            //sets what code should be executed after the picture is taken
-            Camera.PreviewCallback previewCallback= new Camera.PreviewCallback()
+
+
+           mCamera.setPreviewCallback(new Camera.PreviewCallback()
             {
 
                 @Override
                 public void onPreviewFrame(byte[] data, Camera camera) {
-
+                    if (computeTask == null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
+                        Log.d(TAG, "inside onPreviewFrame");
+                        computeTask = new IrradianceComputeTask();
+                        computeTask.execute(data);
+                    }
                 }
-            };
-
+            });
+            mCamera.startPreview();
 
         }
 
@@ -183,7 +202,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
 
                 try {
 
-
+                    mCamera.setPreviewTexture(new SurfaceTexture(fakeTextureHandle[0]));
 
                     mCamera.addCallbackBuffer(createPreviewBuffer());
                     mCamera.addCallbackBuffer(createPreviewBuffer());
@@ -258,7 +277,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
             byte[] jdata = baos.toByteArray();
 
             //give back buffer
-            mCamera.addCallbackBuffer(data);
+        //    mCamera.addCallbackBuffer(data);
             // Convert to Bitmap
             Bitmap bmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
 
