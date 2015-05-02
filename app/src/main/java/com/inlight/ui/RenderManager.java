@@ -67,6 +67,8 @@ public class RenderManager implements GLSurfaceView.Renderer {
     private IrradianceComputeTask computeTask;
     private Camera.Size mPreviewSize;
     private SurfaceView mDummyView;
+    private int fpsCounter = 0;
+
     public RenderManager(Context c, GLSurfaceView v, int texResId, int bumpResId, SurfaceView dummyView){
         mContext = c;
         mView = v;
@@ -363,14 +365,20 @@ public class RenderManager implements GLSurfaceView.Renderer {
 
     private void printFPS(){
         long now = SystemClock.uptimeMillis();
-        if(lastTime != -1)
-            Log.d(TAG, "fps = " + (1000.0 / (now - lastTime)));
-        lastTime = now;
+
+        if(now-lastTime > 1000){
+            Log.d(TAG, "fps = " + fpsCounter);
+            fpsCounter = 0;
+            lastTime = now;
+        }
+        else{
+            fpsCounter++;
+        }
     }
 
     @Override
     public void onDrawFrame(GL10 unused) {
-       // printFPS();
+        printFPS();
 
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         if(mIrradianceMatrix == null) return;
