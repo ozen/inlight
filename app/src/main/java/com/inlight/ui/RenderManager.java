@@ -135,10 +135,12 @@ public class RenderManager implements GLSurfaceView.Renderer {
         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 
 
+            mCamera.addCallbackBuffer(createPreviewBuffer());
+            mCamera.addCallbackBuffer(createPreviewBuffer());
+            mCamera.addCallbackBuffer(createPreviewBuffer());
 
 
-
-           mCamera.setPreviewCallback(new Camera.PreviewCallback()
+           mCamera.setPreviewCallbackWithBuffer(new Camera.PreviewCallback()
             {
 
                 @Override
@@ -279,7 +281,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
             byte[] jdata = baos.toByteArray();
 
             //give back buffer
-        //    mCamera.addCallbackBuffer(data);
+            mCamera.addCallbackBuffer(data);
             // Convert to Bitmap
             Bitmap bmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
 
