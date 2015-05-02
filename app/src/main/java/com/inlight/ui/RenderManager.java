@@ -142,7 +142,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
 
            mCamera.setPreviewCallbackWithBuffer(new Camera.PreviewCallback()
             {
-
+                byte[] data_old = null;
                 @Override
                 public void onPreviewFrame(byte[] data, Camera camera) {
                     if (computeTask == null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
@@ -150,6 +150,9 @@ public class RenderManager implements GLSurfaceView.Renderer {
                         computeTask = new IrradianceComputeTask();
                         computeTask.execute(data);
                     }
+                    if(data_old != null)
+                        mCamera.addCallbackBuffer(data_old);
+                    data_old = data;
                 }
             });
             mCamera.startPreview();
@@ -280,8 +283,8 @@ public class RenderManager implements GLSurfaceView.Renderer {
             yuvimage.compressToJpeg(new Rect(0, 0, mPreviewSize.width, mPreviewSize.height), 80, baos);
             byte[] jdata = baos.toByteArray();
 
-            //give back buffer
-            mCamera.addCallbackBuffer(data);
+
+
             // Convert to Bitmap
             Bitmap bmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
 
