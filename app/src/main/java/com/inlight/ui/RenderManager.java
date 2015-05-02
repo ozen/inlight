@@ -144,7 +144,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
                 @Override
                 public void onPreviewFrame(byte[] data, Camera camera) {
                     if (computeTask == null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
-                        Log.d(TAG, "inside onPreviewFrame");
+                       // Log.d(TAG, "inside onPreviewFrame");
                         computeTask = new IrradianceComputeTask();
                         computeTask.execute(data);
                     }
