@@ -294,7 +294,7 @@ public class RenderManager implements GLSurfaceView.Renderer {
         protected void onPostExecute(Bitmap bitmap) {
 
 
-          //  mView.requestRender();
+           mView.requestRender();
 
             if(bitmap != null) {
                 bitmap.recycle();
