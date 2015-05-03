@@ -45,17 +45,22 @@ void main()
         m_IrradianceMatrix[band][3][3] = c4L00 * brdf[0] - c5L20 * brdf[6];
     }
 
-    vec4 irradiance = vec4(0.0, 0.0, 0.0, 1.0);
-    irradiance.r = dot(normal, m_IrradianceMatrix[0] * normal);
-    irradiance.g = dot(normal, m_IrradianceMatrix[1] * normal);
-    irradiance.b = dot(normal, m_IrradianceMatrix[2] * normal);
+    vec4 specular = vec4(0.0, 0.0, 0.0, 1.0);
+    specular.r = dot(normal, m_IrradianceMatrix[0] * normal);
+    specular.g = dot(normal, m_IrradianceMatrix[1] * normal);
+    specular.b = dot(normal, m_IrradianceMatrix[2] * normal);
 
-    vec4 materialDiffuse = vec4(0.3);
-    vec4 materialEmissive=vec4(0.001);
-    vec4 ambient = vec4(0.03);
-    vec4 diffuse =  irradiance * materialDiffuse;
-    vec4 emissive = materialEmissive;
-    gl_FragColor = (emissive + ambient + diffuse) *texture2D(u_Texture, v_TexCoord);
+    float irradiance_r = dot(normal, u_IrradianceMatrix[0] * normal);
+    float irradiance_g = dot(normal, u_IrradianceMatrix[1] * normal);
+    float irradiance_b = dot(normal, u_IrradianceMatrix[2] * normal);
+    float mean = (irradiance_r + irradiance_g + irradiance_b) / 3.0;
+    float raised = pow(mean, 0.01);
+    vec4 irradiance = vec4(vec3(raised), 1.0);
+
+    specular *= vec4(0.05);
+    vec4 diffuse = irradiance * texture2D(u_Texture, v_TexCoord);
+
+    gl_FragColor = specular;
 }
 
 

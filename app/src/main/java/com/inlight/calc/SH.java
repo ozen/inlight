@@ -57,8 +57,8 @@ public class SH {
         int width = envNormals.length;
         int height = envNormals[0].length;
         for (int band = 0; band < 3; band++) {
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x+=3) {
+                for (int y = 0; y < height; y+=3) {
                     Vector3D L = envNormals[x][y];
                     int light = bitmap.getPixel(x, y);
                     int value = 0;
@@ -82,7 +82,7 @@ public class SH {
                 }
             }
             for (int k = 0; k < 9; k++) {
-                lightCoefs[k][band] *= (4 * Math.PI) / (width * height);
+                lightCoefs[k][band] *= (4 * Math.PI) / (width * height * 9);
             }
         }
         return lightCoefs;
