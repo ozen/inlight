@@ -1,6 +1,8 @@
 package com.inlight.ui;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
@@ -43,16 +45,28 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer {
     private int mProgramHandle;
 
     private Integer mTextureResId;
+    private float[] mTextureSize = new float[2];
     private Integer mBumpResId;
+    private double mRoughness;
+    private double mFresnel;
 
     private Semaphore mIrradianceArrayLock = new Semaphore(1);
 
-    public SurfaceRenderer(Context context, Integer textureResId, Integer bumpResId) {
+    public SurfaceRenderer(Context context, Integer textureResId, Integer bumpResId, double roughness, double fresnel) {
         mContext = context;
         mTextureResId = textureResId;
         mBumpResId = bumpResId;
         mIrradianceArrayLock = new Semaphore(1);
+        mRoughness = roughness;
+        mFresnel = fresnel;
         setupBRDF();
+
+        BitmapFactory.Options dimensions = new BitmapFactory.Options();
+        dimensions.inJustDecodeBounds = true;
+        BitmapFactory.decodeResource(context.getResources(), textureResId, dimensions);
+        mTextureSize[0] =  dimensions.outWidth;
+        mTextureSize[1] = dimensions.outHeight;
+        Log.d("QWEQWE", "" + mTextureSize[0] +" "+ mTextureSize[1]);
     }
 
     public void setIrradianceArray(float[] irradianceArray) {
@@ -121,6 +135,9 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer {
         int mMVPHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_MVPMatrix");
         GLES20.glUniformMatrix4fv(mMVPHandle, 1, false, mMVPMatrix, 0);
 
+        int mTextureSizeHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_TextureSize");
+        GLES20.glUniform1fv(mTextureSizeHandle, 2, mTextureSize, 0);
+
         int mIrradianceMatrixHandle = GLES20.glGetUniformLocation(mProgramHandle, "u_IrradianceMatrix");
         try {
             mIrradianceArrayLock.tryAcquire(2500, TimeUnit.MILLISECONDS);
@@ -152,7 +169,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer {
     }
 
     private void setupBRDF() {
-        double[][][] mBRDFCoeffs = SH.computeBRDFCoefs();
+        double[][][] mBRDFCoeffs = SH.computeBRDFCoefs(mRoughness, mFresnel);
 
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++) {

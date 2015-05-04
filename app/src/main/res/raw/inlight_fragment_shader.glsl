@@ -4,6 +4,7 @@ uniform sampler2D u_Texture;
 uniform sampler2D u_Bump;
 uniform mat4 u_IrradianceMatrix[3];
 uniform float u_BRDFCoeffs[225];
+uniform float u_TextureSize[2];
 
 varying vec2 v_TexCoord;
 
@@ -11,7 +12,7 @@ int brdfIndex(int i1, int i2, int i3);
 void getBRDF(vec3 normal, inout float brdf[9]);
 vec2 cart2sph(vec3 cart);
 vec2 sph2index(vec2 sph);
-
+vec4 getTexture(sampler2D texture, vec2 coord);
 
 void main()
 {
@@ -55,12 +56,21 @@ void main()
     float irradiance_b = dot(normal, u_IrradianceMatrix[2] * normal);
     float mean = (irradiance_r + irradiance_g + irradiance_b) / 3.0;
     float raised = pow(mean, 0.01);
+    raised = mean * 0.05;
     vec4 irradiance = vec4(vec3(raised), 1.0);
 
-    specular *= vec4(0.05);
+    specular *= vec4(0.15);
     vec4 diffuse = irradiance * texture2D(u_Texture, v_TexCoord);
 
-    gl_FragColor = specular;
+    gl_FragColor = diffuse + specular;
+}
+
+
+vec4 getTexture(sampler2D texture, vec2 coord)
+{
+    coord.x = mod(floor(coord.x/10.0), u_TextureSize[0]);
+    coord.y = mod(floor(coord.y/10.0), u_TextureSize[1]);
+    return texture2D(texture, coord);
 }
 
 

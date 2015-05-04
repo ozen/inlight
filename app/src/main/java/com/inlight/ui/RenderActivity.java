@@ -42,8 +42,8 @@ public class RenderActivity extends Activity {
         SurfaceView dummyView = new SurfaceView(this);
         layout.addView(dummyView);
         LinearLayout.LayoutParams params2 = (LinearLayout.LayoutParams) dummyView.getLayoutParams();
-        params2.height = 100;
-        params2.width = 100;
+        params2.height = 300;
+        params2.width = 300;
         dummyView.setLayoutParams(params2);
 
         Intent intent = getIntent();

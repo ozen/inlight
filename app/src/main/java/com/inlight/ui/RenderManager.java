@@ -26,12 +26,15 @@ public class RenderManager {
     public static final Integer[] mImageResIds = new Integer[]{
             R.drawable.fabric_5510,
             R.drawable.fabric_6164,
-            R.drawable.fabric_6447};
+            R.drawable.fabric_6447
+    };
 
     public static final Integer[] mBumpResIds = new Integer[]{
             R.drawable.fabric_5510_bump,
             R.drawable.fabric_6164_bump,
-            R.drawable.fabric_6447_bump};
+            R.drawable.fabric_6447_bump,
+            R.drawable.fabric_6164_bump2
+    };
 
     private Context mContext;
     private GLSurfaceView mSurfaceView1;
@@ -121,8 +124,8 @@ public class RenderManager {
         mSurfaceView2 = view2;
         mDummyView = dummyView;
 
-        mSurfaceRenderer1 = new SurfaceRenderer(c, mImageResIds[0], mBumpResIds[0]);
-        mSurfaceRenderer2 = new SurfaceRenderer(c, mImageResIds[1], mBumpResIds[1]);
+        mSurfaceRenderer1 = new SurfaceRenderer(c, mImageResIds[1], mBumpResIds[3], 100.0, 20.0);
+        mSurfaceRenderer2 = new SurfaceRenderer(c, mImageResIds[1], mBumpResIds[3], 0.5, 0.2);
 
         view1.setRenderer(mSurfaceRenderer1);
         view2.setRenderer(mSurfaceRenderer2);
