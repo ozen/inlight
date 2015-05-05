@@ -16,6 +16,7 @@ import android.view.SurfaceView;
 
 import com.inlight.R;
 import com.inlight.calc.SH;
+import com.inlight.calc.Vector3D;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -124,8 +125,10 @@ public class RenderManager {
         mSurfaceView2 = view2;
         mDummyView = dummyView;
 
-        mSurfaceRenderer1 = new SurfaceRenderer(c, mImageResIds[1], mBumpResIds[3], 100.0, 20.0);
-        mSurfaceRenderer2 = new SurfaceRenderer(c, mImageResIds[1], mBumpResIds[3], 0.5, 0.2);
+        mSurfaceRenderer1 = new SurfaceRenderer(c, mImageResIds[2], mBumpResIds[3],
+                new Vector3D(0.0, 0.0, 1.0), 10.0, 10.0);
+        mSurfaceRenderer2 = new SurfaceRenderer(c, mImageResIds[2], mBumpResIds[3],
+                new Vector3D(0.0, 0.0, 1.0), 1.5, 0.1);
 
         view1.setRenderer(mSurfaceRenderer1);
         view2.setRenderer(mSurfaceRenderer2);

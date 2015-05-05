@@ -90,13 +90,13 @@ public class SH {
 
 
 
-    public static double[][][] computeBRDFCoefs(double roughness, double fresnel) {
+    public static double[][][] computeBRDFCoefs(Vector3D V, double roughness, double fresnel) {
      //   System.out.println("Calculating BRDF SH projection.");
         ArrayList<Vector3D> sampleVectors = generateSampleVectors(1000);
         double brdfCoefs[][][] = new double[5][5][9];
 
         long startTime = System.currentTimeMillis();
-        Vector3D V = new Vector3D(0.0, 0.0, 1.0);
+//        Vector3D V = new Vector3D(1.0, 1.0, 0.1);
         for (int t = 0; t < 5; t++) {
             for (int p = 0; p < 5; p++) {
                 Vector3D N = new Vector3D(index2cart(new int[]{t, p}));

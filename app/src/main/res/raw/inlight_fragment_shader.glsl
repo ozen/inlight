@@ -59,7 +59,7 @@ void main()
     raised = mean * 0.05;
     vec4 irradiance = vec4(vec3(raised), 1.0);
 
-    specular *= vec4(0.15);
+    specular *= vec4(vec3(0.75), 1.0);
     vec4 diffuse = irradiance * texture2D(u_Texture, v_TexCoord);
 
     gl_FragColor = diffuse + specular;

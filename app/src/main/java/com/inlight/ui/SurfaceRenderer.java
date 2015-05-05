@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.inlight.R;
 import com.inlight.calc.SH;
+import com.inlight.calc.Vector3D;
 import com.inlight.util.RawResourceHelper;
 import com.inlight.util.ShaderHelper;
 import com.inlight.util.TextureHelper;
@@ -49,14 +50,16 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer {
     private Integer mBumpResId;
     private double mRoughness;
     private double mFresnel;
+    private Vector3D mViewer;
 
     private Semaphore mIrradianceArrayLock = new Semaphore(1);
 
-    public SurfaceRenderer(Context context, Integer textureResId, Integer bumpResId, double roughness, double fresnel) {
+    public SurfaceRenderer(Context context, Integer textureResId, Integer bumpResId, Vector3D V, double roughness, double fresnel) {
         mContext = context;
         mTextureResId = textureResId;
         mBumpResId = bumpResId;
         mIrradianceArrayLock = new Semaphore(1);
+        mViewer = V;
         mRoughness = roughness;
         mFresnel = fresnel;
         setupBRDF();
@@ -169,7 +172,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer {
     }
 
     private void setupBRDF() {
-        double[][][] mBRDFCoeffs = SH.computeBRDFCoefs(mRoughness, mFresnel);
+        double[][][] mBRDFCoeffs = SH.computeBRDFCoefs(mViewer, mRoughness, mFresnel);
 
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++) {
