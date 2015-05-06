@@ -177,15 +177,15 @@ public class SH {
 
 
     private static double[] index2sph(int[] index) {
-        double theta = (index[0] / 5) * Math.PI /2.0;
+        double theta = (index[0] / 4) * Math.PI /2.0;
         double phi = (index[1]/5) * 2*Math.PI -Math.PI ;
         return new double[]{theta, phi};
     }
     private static int[] sph2index(double[] sph) {
-        if (sph[0] < 0 || sph[0] > Math.PI / 2.0 || sph[1] < -Math.PI || sph[1] > Math.PI) {
+        if (sph[0] < 0 || sph[0] > 1+Math.PI / 2.0 || sph[1] < -Math.PI || sph[1] > Math.PI) {
             return new int[]{};
         } else {
-            int t = Math.round((float) (sph[0] * (2.0/Math.PI) *5));
+            int t = Math.round((float) (sph[0] * (2.0/Math.PI) *4));
             int p = Math.round((float) ((sph[1]+Math.PI) /(2.0* Math.PI) *5));
             return new int[]{t, p};
         }

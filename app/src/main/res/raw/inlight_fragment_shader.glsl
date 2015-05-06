@@ -130,7 +130,7 @@ vec2 cart2sph(vec3 cart)
 
 vec2 sph2index(vec2 sph)
 {
-    vec2 index = (sph + vec2(0.0, PI))  * vec2(10.0/PI, 5.0/(2.0*PI));
+    vec2 index = (sph + vec2(0.0, PI))  * vec2(8.0/PI, 5.0/(2.0*PI));
     return index;
 
 /*    vec2 index;
