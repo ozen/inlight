@@ -32,17 +32,17 @@ void main()
         float c5L20 = (u_IrradianceMatrix[band][2][2] / 0.743125) * 0.247708;
         float c4L00 = u_IrradianceMatrix[band][3][3] + c5L20;
 
-        m_IrradianceMatrix[band][0] = u_IrradianceMatrix[band][0] *
+     /*   m_IrradianceMatrix[band][0] = u_IrradianceMatrix[band][0] *
                                               vec4(brdf[8], brdf[4], brdf[7], brdf[3]);
         m_IrradianceMatrix[band][1] = u_IrradianceMatrix[band][1] *
                                               vec4(brdf[4], brdf[8], brdf[5], brdf[1]);
         m_IrradianceMatrix[band][2] = u_IrradianceMatrix[band][2] *
                                               vec4(brdf[7], brdf[5], brdf[6], brdf[2]);
         m_IrradianceMatrix[band][3] = u_IrradianceMatrix[band][3] *
-                                              vec4(brdf[3], brdf[1], brdf[2], 0.0f);
+                                              vec4(brdf[3], brdf[1], brdf[2], 0.0);
 
         m_IrradianceMatrix[band][3][3] = c4L00 * brdf[0] - c5L20 * brdf[6];
-/*
+*/
         m_IrradianceMatrix[band][0][0] = u_IrradianceMatrix[band][0][0] * brdf[8];
         m_IrradianceMatrix[band][0][1] = u_IrradianceMatrix[band][0][1] * brdf[4];
         m_IrradianceMatrix[band][0][2] = u_IrradianceMatrix[band][0][2] * brdf[7];
@@ -59,7 +59,7 @@ void main()
         m_IrradianceMatrix[band][3][1] = u_IrradianceMatrix[band][3][1] * brdf[1];
         m_IrradianceMatrix[band][3][2] = u_IrradianceMatrix[band][3][2] * brdf[2];
         m_IrradianceMatrix[band][3][3] = c4L00 * brdf[0] - c5L20 * brdf[6];
-  */
+
     }
 
     vec3 specular = vec3(dot(normal, m_IrradianceMatrix[0] * normal),
@@ -77,7 +77,7 @@ void main()
 
     vec4 diffuse = 0.05 * mean  * texture2D(u_Texture, v_TexCoord);
 
-    gl_FragColor = diffuse + vec4(specular*0.75, 1.0f);
+    gl_FragColor = diffuse + vec4(specular*0.75, 1.0);
 }
 
 
@@ -117,7 +117,7 @@ int brdfIndex(int i1, int i2, int i3)
 
 vec2 cart2sph(vec3 cart)
 {
-    vec2 sph = vec2(acos(cart.z / length(cart)), atan2(cart.y , cart.x));
+    vec2 sph = vec2(acos(cart.z / length(cart)), atan(cart.y , cart.x));
     return sph;
     /*
     vec2sph;
@@ -130,7 +130,7 @@ vec2 cart2sph(vec3 cart)
 
 vec2 sph2index(vec2 sph)
 {
-    vec2 index = (sph + vec2(0.0f, PI))  * vec2(10.0f/PI, 5.0f/(2.0f*PI));
+    vec2 index = (sph + vec2(0.0, PI))  * vec2(10.0/PI, 5.0/(2.0*PI));
     return index;
 
 /*    vec2 index;
