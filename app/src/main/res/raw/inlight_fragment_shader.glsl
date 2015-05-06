@@ -32,6 +32,17 @@ void main()
         float c5L20 = (u_IrradianceMatrix[band][2][2] / 0.743125) * 0.247708;
         float c4L00 = u_IrradianceMatrix[band][3][3] + c5L20;
 
+        m_IrradianceMatrix[band][0] = u_IrradianceMatrix[band][0] *
+                                              vec4(brdf[8], brdf[4], brdf[7], brdf[3]);
+        m_IrradianceMatrix[band][1] = u_IrradianceMatrix[band][1] *
+                                              vec4(brdf[4], brdf[8], brdf[5], brdf[1]);
+        m_IrradianceMatrix[band][2] = u_IrradianceMatrix[band][2] *
+                                              vec4(brdf[7], brdf[5], brdf[6], brdf[2]);
+        m_IrradianceMatrix[band][3] = u_IrradianceMatrix[band][3] *
+                                              vec4(brdf[3], brdf[1], brdf[2], 0.0f);
+
+        m_IrradianceMatrix[band][3][3] = c4L00 * brdf[0] - c5L20 * brdf[6];
+/*
         m_IrradianceMatrix[band][0][0] = u_IrradianceMatrix[band][0][0] * brdf[8];
         m_IrradianceMatrix[band][0][1] = u_IrradianceMatrix[band][0][1] * brdf[4];
         m_IrradianceMatrix[band][0][2] = u_IrradianceMatrix[band][0][2] * brdf[7];
@@ -48,6 +59,7 @@ void main()
         m_IrradianceMatrix[band][3][1] = u_IrradianceMatrix[band][3][1] * brdf[1];
         m_IrradianceMatrix[band][3][2] = u_IrradianceMatrix[band][3][2] * brdf[2];
         m_IrradianceMatrix[band][3][3] = c4L00 * brdf[0] - c5L20 * brdf[6];
+  */
     }
 
     vec3 specular = vec3(dot(normal, m_IrradianceMatrix[0] * normal),
@@ -56,10 +68,10 @@ void main()
 
 
 
-    float irradiance_r = dot(normal, u_IrradianceMatrix[0] * normal);
-    float irradiance_g = dot(normal, u_IrradianceMatrix[1] * normal);
-    float irradiance_b = dot(normal, u_IrradianceMatrix[2] * normal);
-    float mean = (irradiance_r + irradiance_g + irradiance_b) / 3.0;
+    vec3 irradiance= vec3(dot(normal, u_IrradianceMatrix[0] * normal),
+                         dot(normal, u_IrradianceMatrix[1] * normal),
+                         dot(normal, u_IrradianceMatrix[2] * normal));
+    float mean = (irradiance.r + irradiance.g + irradiance.b) / 3.0;
 
 
 
