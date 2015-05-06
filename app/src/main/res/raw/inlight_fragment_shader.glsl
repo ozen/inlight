@@ -1,5 +1,9 @@
 precision mediump float;
 
+
+#define PI 3.141592653589793238462643383279
+
+
 uniform sampler2D u_Texture;
 uniform sampler2D u_Bump;
 uniform mat4 u_IrradianceMatrix[3];
@@ -101,18 +105,25 @@ int brdfIndex(int i1, int i2, int i3)
 
 vec2 cart2sph(vec3 cart)
 {
-    vec2 sph;
+    vec2 sph = vec2(acos(cart.z / length(cart)), atan(cart.y / cart.x));
+    return sph;
+    /*
+    vec2sph;
     sph.x = acos(cart.z / length(cart));
     sph.y = atan(cart.y / cart.x);
     return sph;
+    */
 }
 
 
 vec2 sph2index(vec2 sph)
 {
-    float pi = 3.14159265358;
-    vec2 index;
+    vec2 index = sph * (4.0f/PI) +2.0f;
+    return index;
+
+/*    vec2 index;
     index.x = (sph.x * (4.0 / pi)) + 2.0;
     index.y = (sph.y * (4.0 / pi)) + 2.0;
     return index;
+    */
 }
