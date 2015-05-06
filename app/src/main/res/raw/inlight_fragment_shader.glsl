@@ -63,9 +63,9 @@ void main()
 
 
 
-    vec4 diffuse = vec4(vec3(mean * 0.05), 1.0) * texture2D(u_Texture, v_TexCoord);
+    vec4 diffuse = 0.05 * mean  * texture2D(u_Texture, v_TexCoord);
 
-    gl_FragColor = diffuse + vec4(specular*0.75, 0.0f);
+    gl_FragColor = diffuse + vec4(specular*0.75, 1.0f);
 }
 
 
