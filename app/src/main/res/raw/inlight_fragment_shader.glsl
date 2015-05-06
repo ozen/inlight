@@ -50,23 +50,22 @@ void main()
         m_IrradianceMatrix[band][3][3] = c4L00 * brdf[0] - c5L20 * brdf[6];
     }
 
-    vec4 specular = vec4(0.0, 0.0, 0.0, 1.0);
-    specular.r = dot(normal, m_IrradianceMatrix[0] * normal);
-    specular.g = dot(normal, m_IrradianceMatrix[1] * normal);
-    specular.b = dot(normal, m_IrradianceMatrix[2] * normal);
+    vec3 specular = vec3(dot(normal, m_IrradianceMatrix[0] * normal),
+                        dot(normal, m_IrradianceMatrix[1] * normal),
+                        dot(normal, m_IrradianceMatrix[2] * normal));
+
+
 
     float irradiance_r = dot(normal, u_IrradianceMatrix[0] * normal);
     float irradiance_g = dot(normal, u_IrradianceMatrix[1] * normal);
     float irradiance_b = dot(normal, u_IrradianceMatrix[2] * normal);
     float mean = (irradiance_r + irradiance_g + irradiance_b) / 3.0;
-    float raised = pow(mean, 0.01);
-    raised = mean * 0.05;
-    vec4 irradiance = vec4(vec3(raised), 1.0);
 
-    specular *= vec4(vec3(0.75), 1.0);
-    vec4 diffuse = irradiance * texture2D(u_Texture, v_TexCoord);
 
-    gl_FragColor = diffuse + specular;
+
+    vec4 diffuse = vec4(vec3(mean * 0.05), 1.0) * texture2D(u_Texture, v_TexCoord);
+
+    gl_FragColor = diffuse + vec4(specular*0.75, 0.0f);
 }
 
 
@@ -93,7 +92,8 @@ void getBRDF(vec3 normal, inout float brdf[9])
     {
         brdf[k] = mix(
             mix(u_BRDFCoeffs[brdfIndex(ll.x, ll.y, k)], u_BRDFCoeffs[brdfIndex(lr.x, lr.y, k)], hratio),
-            mix(u_BRDFCoeffs[brdfIndex(ul.x, ul.y, k)], u_BRDFCoeffs[brdfIndex(ur.x, ur.y, k)], hratio), vratio);
+            mix(u_BRDFCoeffs[brdfIndex(ul.x, ul.y, k)], u_BRDFCoeffs[brdfIndex(ur.x, ur.y, k)], hratio),
+             vratio);
     }
 }
 
@@ -105,7 +105,7 @@ int brdfIndex(int i1, int i2, int i3)
 
 vec2 cart2sph(vec3 cart)
 {
-    vec2 sph = vec2(acos(cart.z / length(cart)), atan(cart.y / cart.x));
+    vec2 sph = vec2(acos(cart.z / length(cart)), atan2(cart.y , cart.x));
     return sph;
     /*
     vec2sph;
@@ -118,7 +118,7 @@ vec2 cart2sph(vec3 cart)
 
 vec2 sph2index(vec2 sph)
 {
-    vec2 index = sph * (4.0f/PI) +2.0f;
+    vec2 index = (sph + vec2(0.0f, PI))  * vec2(10.0f/PI, 5.0f/(2.0f*PI));
     return index;
 
 /*    vec2 index;

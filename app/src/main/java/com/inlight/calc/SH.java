@@ -177,16 +177,16 @@ public class SH {
 
 
     private static double[] index2sph(int[] index) {
-        double theta = (index[0] - 2) * (Math.PI / 4);
-        double phi = (index[1] - 2) * (Math.PI / 4);
+        double theta = (index[0] / 5) * Math.PI /2.0;
+        double phi = (index[1]/5) * 2*Math.PI -Math.PI ;
         return new double[]{theta, phi};
     }
     private static int[] sph2index(double[] sph) {
-        if (sph[0] > Math.PI / 2 || sph[0] < -Math.PI / 2 || sph[1] > Math.PI / 2 || sph[1] < -Math.PI / 2) {
+        if (sph[0] < 0 || sph[0] > Math.PI / 2.0 || sph[1] < -Math.PI || sph[1] > Math.PI) {
             return new int[]{};
         } else {
-            int t = Math.round((float) (sph[0] * (4.0 / Math.PI)) + 2);
-            int p = Math.round((float) (sph[1] * (4.0 / Math.PI)) + 2);
+            int t = Math.round((float) (sph[0] * (2.0/Math.PI) *5));
+            int p = Math.round((float) ((sph[1]+Math.PI) /(2.0* Math.PI) *5));
             return new int[]{t, p};
         }
     }
@@ -199,8 +199,7 @@ public class SH {
     private static double[] cart2sph(double[] cart) {
         double r = Math.sqrt(cart[0] * cart[0] + cart[1] * cart[1] + cart[2] * cart[2]);
         double theta = Math.acos(cart[2] / r);
-        if (cart[0] < 0) theta *= -1;
-        double phi = Math.atan(cart[1] / cart[0]);
+        double phi = Math.atan2(cart[1] ,cart[0]);
         return new double[]{theta, phi};
     }
     private static double[] index2cart(int[] index) {
