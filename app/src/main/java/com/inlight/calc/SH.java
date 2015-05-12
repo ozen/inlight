@@ -4,6 +4,7 @@ package com.inlight.calc;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.util.Log;
 
 import com.inlight.util.RawResourceHelper;
 
@@ -59,7 +60,7 @@ public class SH {
         for (int band = 0; band < 3; band++) {
             for (int x = 0; x < width; x+=3) {
                 for (int y = 0; y < height; y+=3) {
-                    Vector3D L = envNormals[x][y];
+                    Vector3D L = envNormals[width-x-1][y];
                     int light = bitmap.getPixel(x, y);
                     int value = 0;
                     switch (band) {
@@ -100,6 +101,9 @@ public class SH {
         for (int t = 0; t < 5; t++) {
             for (int p = 0; p < 5; p++) {
                 Vector3D N = new Vector3D(index2cart(new int[]{t, p}));
+
+//                Log.d("NORMAL", "" + N);
+
                 for (int k = 0; k < 9; k++) {
                     brdfCoefs[t][p][k] = 0;
                 }
@@ -177,16 +181,16 @@ public class SH {
 
 
     private static double[] index2sph(int[] index) {
-        double theta = (index[0] / 4) * Math.PI /2.0;
-        double phi = (index[1]/5) * 2*Math.PI -Math.PI ;
+        double theta = BRDF.clamp((index[0] / 4.0) * (Math.PI / 2.0), 0.01, (Math.PI / 2.0) - 0.01);
+        double phi = ((index[1] / 4.0) * (2 * Math.PI)) - Math.PI;
         return new double[]{theta, phi};
     }
     private static int[] sph2index(double[] sph) {
         if (sph[0] < 0 || sph[0] > 1+Math.PI / 2.0 || sph[1] < -Math.PI || sph[1] > Math.PI) {
             return new int[]{};
         } else {
-            int t = Math.round((float) (sph[0] * (2.0/Math.PI) *4));
-            int p = Math.round((float) ((sph[1]+Math.PI) /(2.0* Math.PI) *5));
+            int t = Math.round((float) (sph[0] * (2.0/Math.PI) * 4));
+            int p = Math.round((float) ((sph[1]+Math.PI) /(2.0 * Math.PI) * 5));
             return new int[]{t, p};
         }
     }

@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.inlight.R;
 
@@ -29,21 +30,21 @@ public class RenderActivity extends Activity {
         layout.addView(mGLSurfaceView);
         LinearLayout.LayoutParams params1 = (LinearLayout.LayoutParams) mGLSurfaceView.getLayoutParams();
         params1.height = 1600;
-        params1.width = 1000;
+        params1.width = 1100;
         mGLSurfaceView.setLayoutParams(params1);
 
         GLSurfaceView mGLSurfaceView2 = new GLSurfaceView(this);
         layout.addView(mGLSurfaceView2);
         LinearLayout.LayoutParams params3 = (LinearLayout.LayoutParams) mGLSurfaceView2.getLayoutParams();
         params3.height = 1600;
-        params3.width = 1000;
+        params3.width = 1100;
         mGLSurfaceView2.setLayoutParams(params3);
 
         SurfaceView dummyView = new SurfaceView(this);
         layout.addView(dummyView);
         LinearLayout.LayoutParams params2 = (LinearLayout.LayoutParams) dummyView.getLayoutParams();
-        params2.height = 300;
-        params2.width = 300;
+        params2.height = 360;
+        params2.width = 360;
         dummyView.setLayoutParams(params2);
 
         Intent intent = getIntent();

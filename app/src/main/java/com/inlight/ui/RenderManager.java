@@ -34,7 +34,8 @@ public class RenderManager {
             R.drawable.fabric_5510_bump,
             R.drawable.fabric_6164_bump,
             R.drawable.fabric_6447_bump,
-            R.drawable.fabric_6164_bump2
+            R.drawable.fabric_6164_bump2,
+            R.drawable.fabric_6164_bump3
     };
 
     private Context mContext;
@@ -60,11 +61,11 @@ public class RenderManager {
         public void onPreviewFrame(byte[] data, Camera camera) {
 //            printFPS();
 
-            Log.d(TAG, "onPreviewFrame BEGIN");
+//            Log.d(TAG, "onPreviewFrame BEGIN");
             checkLockExposure();
             computeIrradiance(data);
             triggerRender();
-            Log.d(TAG, "onPreviewFrame END");
+//            Log.d(TAG, "onPreviewFrame END");
 
 //            if (computeTask == null || computeTask.getStatus() == AsyncTask.Status.FINISHED) {
 //                // Log.d(TAG, "inside onPreviewFrame");
@@ -125,10 +126,10 @@ public class RenderManager {
         mSurfaceView2 = view2;
         mDummyView = dummyView;
 
-        mSurfaceRenderer1 = new SurfaceRenderer(c, mImageResIds[2], mBumpResIds[3],
-                new Vector3D(0.0, 0.0, 1.0), 10.0, 10.0);
-        mSurfaceRenderer2 = new SurfaceRenderer(c, mImageResIds[2], mBumpResIds[3],
-                new Vector3D(0.0, 0.0, 1.0), 1.5, 0.1);
+        mSurfaceRenderer1 = new SurfaceRenderer(c, mImageResIds[1], mBumpResIds[4],
+                new Vector3D(0.0, 0.0, 1.0), 3.0, 1.0);
+        mSurfaceRenderer2 = new SurfaceRenderer(c, mImageResIds[1], mBumpResIds[4],
+                new Vector3D(0.0, 0.0, 1.0), 1.5, 0.5);
 
         view1.setRenderer(mSurfaceRenderer1);
         view2.setRenderer(mSurfaceRenderer2);

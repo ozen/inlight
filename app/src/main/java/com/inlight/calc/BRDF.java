@@ -42,10 +42,10 @@ public class BRDF {
         double rb = Math.PI * Math.pow((NdotH * NdotH * (rSq - 1.0) + 1.0), 2.0);
         return rSq / rb;
     }
-    private static double clamp(double val, double min, double max) {
+    public static double clamp(double val, double min, double max) {
         return Math.max(min, Math.min(max, val));
     }
-    private static int clamp(int val, int min, int max) {
+    public static int clamp(int val, int min, int max) {
         return Math.max(min, Math.min(max, val));
     }
 }

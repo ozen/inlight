@@ -115,7 +115,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 unused) {
         if (mIrradianceArray == null) return;
 
-        Log.d(TAG, "onDrawFrame BEGIN");
+//        Log.d(TAG, "onDrawFrame BEGIN");
 
         printFPS();
 
@@ -156,7 +156,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6);
         GLES20.glDisableVertexAttribArray(mPositionHandle);
 
-        Log.d(TAG, "onDrawFrame END");
+//        Log.d(TAG, "onDrawFrame END");
     }
 
     private void printFPS() {

@@ -18,6 +18,12 @@ vec2 cart2sph(vec3 cart);
 vec2 sph2index(vec2 sph);
 vec4 getTexture(sampler2D texture, vec2 coord);
 
+float c1 = 0.429043;
+float c2 = 0.511664;
+float c3 = 0.743125;
+float c4 = 0.886227;
+float c5 = 0.247708;
+
 void main()
 {
     mat4 m_IrradianceMatrix[3];
@@ -29,55 +35,35 @@ void main()
     // update irradiance matrix
     for(int band=0; band<3; band++)
     {
-        float c5L20 = (u_IrradianceMatrix[band][2][2] / 0.743125) * 0.247708;
-        float c4L00 = u_IrradianceMatrix[band][3][3] + c5L20;
-
-     /*   m_IrradianceMatrix[band][0] = u_IrradianceMatrix[band][0] *
-                                              vec4(brdf[8], brdf[4], brdf[7], brdf[3]);
-        m_IrradianceMatrix[band][1] = u_IrradianceMatrix[band][1] *
-                                              vec4(brdf[4], brdf[8], brdf[5], brdf[1]);
-        m_IrradianceMatrix[band][2] = u_IrradianceMatrix[band][2] *
-                                              vec4(brdf[7], brdf[5], brdf[6], brdf[2]);
-        m_IrradianceMatrix[band][3] = u_IrradianceMatrix[band][3] *
-                                              vec4(brdf[3], brdf[1], brdf[2], 0.0);
-
-        m_IrradianceMatrix[band][3][3] = c4L00 * brdf[0] - c5L20 * brdf[6];
-*/
-        m_IrradianceMatrix[band][0][0] = u_IrradianceMatrix[band][0][0] * brdf[8];
-        m_IrradianceMatrix[band][0][1] = u_IrradianceMatrix[band][0][1] * brdf[4];
-        m_IrradianceMatrix[band][0][2] = u_IrradianceMatrix[band][0][2] * brdf[7];
-        m_IrradianceMatrix[band][0][3] = u_IrradianceMatrix[band][0][3] * brdf[3];
-        m_IrradianceMatrix[band][1][0] = u_IrradianceMatrix[band][1][0] * brdf[4];
-        m_IrradianceMatrix[band][1][1] = u_IrradianceMatrix[band][1][1] * brdf[8];
-        m_IrradianceMatrix[band][1][2] = u_IrradianceMatrix[band][1][2] * brdf[5];
-        m_IrradianceMatrix[band][1][3] = u_IrradianceMatrix[band][1][3] * brdf[1];
-        m_IrradianceMatrix[band][2][0] = u_IrradianceMatrix[band][2][0] * brdf[7];
-        m_IrradianceMatrix[band][2][1] = u_IrradianceMatrix[band][2][1] * brdf[5];
-        m_IrradianceMatrix[band][2][2] = u_IrradianceMatrix[band][2][2] * brdf[6];
-        m_IrradianceMatrix[band][2][3] = u_IrradianceMatrix[band][2][3] * brdf[2];
-        m_IrradianceMatrix[band][3][0] = u_IrradianceMatrix[band][3][0] * brdf[3];
-        m_IrradianceMatrix[band][3][1] = u_IrradianceMatrix[band][3][1] * brdf[1];
-        m_IrradianceMatrix[band][3][2] = u_IrradianceMatrix[band][3][2] * brdf[2];
-        m_IrradianceMatrix[band][3][3] = c4L00 * brdf[0] - c5L20 * brdf[6];
-
+        m_IrradianceMatrix[band][0][0] = c1 * brdf[8];
+        m_IrradianceMatrix[band][0][1] = c1 * brdf[4];
+        m_IrradianceMatrix[band][0][2] = c1 * brdf[7];
+        m_IrradianceMatrix[band][0][3] = c2 * brdf[3];
+        m_IrradianceMatrix[band][1][0] = c1 * brdf[4];
+        m_IrradianceMatrix[band][1][1] = -c1 * brdf[8];
+        m_IrradianceMatrix[band][1][2] = c1 * brdf[5];
+        m_IrradianceMatrix[band][1][3] = c2 * brdf[1];
+        m_IrradianceMatrix[band][2][0] = c1 * brdf[7];
+        m_IrradianceMatrix[band][2][1] = c1 * brdf[5];
+        m_IrradianceMatrix[band][2][2] = c3 * brdf[6];
+        m_IrradianceMatrix[band][2][3] = c2 * brdf[2];
+        m_IrradianceMatrix[band][3][0] = c2 * brdf[3];
+        m_IrradianceMatrix[band][3][1] = c2 * brdf[1];
+        m_IrradianceMatrix[band][3][2] = c2 * brdf[2];
+        m_IrradianceMatrix[band][3][3] = c4 * brdf[0] - c5 * brdf[6];
     }
 
-    vec3 specular = vec3(dot(normal, m_IrradianceMatrix[0] * normal),
-                        dot(normal, m_IrradianceMatrix[1] * normal),
-                        dot(normal, m_IrradianceMatrix[2] * normal));
+    mat4 mean_irradiance = (u_IrradianceMatrix[0] + u_IrradianceMatrix[1] + u_IrradianceMatrix[2]) / 3.0;
+    float mean = dot(normal, mean_irradiance * normal);
 
+    vec3 specular = vec3(
+        dot(normal, m_IrradianceMatrix[0] * normal) * dot(normal, u_IrradianceMatrix[0] * normal),
+        dot(normal, m_IrradianceMatrix[1] * normal) * dot(normal, u_IrradianceMatrix[1] * normal),
+        dot(normal, m_IrradianceMatrix[2] * normal) * dot(normal, u_IrradianceMatrix[2] * normal));
 
+    vec4 diffuse = 0.03 * mean * texture2D(u_Texture, v_TexCoord);
 
-    vec3 irradiance= vec3(dot(normal, u_IrradianceMatrix[0] * normal),
-                         dot(normal, u_IrradianceMatrix[1] * normal),
-                         dot(normal, u_IrradianceMatrix[2] * normal));
-    float mean = (irradiance.r + irradiance.g + irradiance.b) / 3.0;
-
-
-
-    vec4 diffuse = 0.05 * mean  * texture2D(u_Texture, v_TexCoord);
-
-    gl_FragColor = diffuse + vec4(specular*0.75, 1.0);
+    gl_FragColor = vec4(vec3(0.10) * specular + diffuse.xyz, 1.0);
 }
 
 
@@ -117,25 +103,12 @@ int brdfIndex(int i1, int i2, int i3)
 
 vec2 cart2sph(vec3 cart)
 {
-    vec2 sph = vec2(acos(cart.z / length(cart)), atan(cart.y , cart.x));
-    return sph;
-    /*
-    vec2sph;
-    sph.x = acos(cart.z / length(cart));
-    sph.y = atan(cart.y / cart.x);
-    return sph;
-    */
+    return vec2(acos(cart.z / length(cart)), atan(cart.y, cart.x));
 }
 
 
 vec2 sph2index(vec2 sph)
 {
-    vec2 index = (sph + vec2(0.0, PI))  * vec2(8.0/PI, 5.0/(2.0*PI));
-    return index;
-
-/*    vec2 index;
-    index.x = (sph.x * (4.0 / pi)) + 2.0;
-    index.y = (sph.y * (4.0 / pi)) + 2.0;
-    return index;
-    */
+    return (sph + vec2(0.0, PI)) * vec2(8.0/PI, 4.0/(2.0*PI));
 }
+
